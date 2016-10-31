@@ -19,9 +19,7 @@ void prepareView(int gridSquareDimension){
       char* disp = malloc(sizeof(char));
       sprintf(disp, "%d", *x);
       button = gtk_button_new_with_label(disp);
-      char* coords = malloc(sizeof(char) * 2); //NOT BEING FREED ATM
-      sprintf(coords, "%d%d", j, i);
-      g_signal_connect(button, "clicked", (GCallback) candySelect, (gpointer) coords);
+      g_signal_connect(button, "clicked", (GCallback) candySelect, (gpointer) getArray2D(md->points, j, i));
       gtk_grid_attach(GTK_GRID(grid), button, gridSquareDimension * j, gridSquareDimension * i, gridSquareDimension, gridSquareDimension);
       free(disp);
     }
@@ -44,6 +42,7 @@ void prepareView(int gridSquareDimension){
   sprintf(moveText, "You have %d moves left", md->moves);
   GtkWidget* moveTextLabel = gtk_label_new(moveText);
   gtk_grid_attach(GTK_GRID(grid), moveTextLabel, gridSquareDimension * (md->arr->columns + 1) + 10, 0, 100, 60);
+  free(moveText);
 }
 
 // is called when a directional button is pressed
@@ -108,15 +107,32 @@ int main (int argc, char **argv){
 
   //set up the model
   Array2D arr = deseralizeInt2DArray(argv[1], &pointers);
+  Array2D points = allocateArray2D(arr->rows + 1, arr->columns + 1);
   md = (ModelData*) malloc(sizeof(ModelData));
   md->arr = arr;
+  md->points = points;
   md->moves = 30;
+
+  for (int i = 0; i <= md->arr->rows; i++) {
+    for (int j = 0; j <= md->arr->columns; j++) {
+      char* coords = malloc(sizeof(char) * 2);
+      sprintf(coords, "%d%d", j, i);
+      setArray2D(md->points, coords, j, i);
+    }
+  }
 
   app = gtk_application_new ("org.gtk.example", G_APPLICATION_HANDLES_OPEN);
   g_signal_connect (app, "open", G_CALLBACK (g_application_open), NULL);
   status = g_application_run (G_APPLICATION (app), argc, argv);
   g_object_unref (app);
   freeArray2D(arr, NULL);
+  for (int i = 0; i <= md->arr->rows; i++) {
+    for (int j = 0; j <= md->arr->columns; j++) {
+      free(getArray2D(md->points, j, i));
+    }
+  }
+  free(pointers);
+  free(md);
 
   return status;
 }
