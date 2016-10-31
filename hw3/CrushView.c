@@ -132,8 +132,8 @@ int main (int argc, char **argv){
     }
   }
   free(pointers);
+  freeArray2D(points, NULL);
   free(md);
-
   return status;
 }
 
