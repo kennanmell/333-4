@@ -1,5 +1,5 @@
-SRC=CrushView.c Array2D.c  # change these to your source file names
-HEADERS=CrushView.h Array2D.h  # change these to your header file names
+SRC=CrushView.c Array2D.c CrushModel.c  # change these to your source file names
+HEADERS=CrushView.h Array2D.h CrushModel.h  # change these to your header file names
 CFLAGS = -Wall -Wpedantic -std=c11 
 IFLAGS =  -I../hw2 -I../jansson/include
 GTKCFLAGS = `pkg-config --cflags gtk+-3.0`

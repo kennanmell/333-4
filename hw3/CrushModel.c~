@@ -1,0 +1,8 @@
+#include "Array2D.h"
+#include <stdlib.h>
+
+ModelCrush swapCandies(ModelCrush mc, char* location, int direction){
+  int x = location[0] - '0';
+  int y = location[1] - '0';
+  
+}

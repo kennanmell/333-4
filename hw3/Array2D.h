@@ -20,6 +20,9 @@ typedef void* Array2DPayload_t;
 // A payload free function. Used to free the payload of an array.
 typedef void(*Array2DPayloadFreeFnPtr)(Array2DPayload_t payload);
 
+// Prints the dimensions of the given array, as well as its contents
+void printArray(Array2D array);
+
 // Returns the payload of a 2D array at (x, y). Returns NULL if array is null or (x,y) is not a valid index for array.
 Array2DPayload_t getArray2D(Array2D array, int x, int y);
 

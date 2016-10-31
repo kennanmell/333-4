@@ -1,0 +1,11 @@
+#ifndef _CModel_h
+#define _CModel_h
+
+typedef struct model_holder {
+    Array2D arr;
+    int moves;
+} ModelData;
+
+void swapCandies(ModelData md, char* location, int direction);
+
+#endif

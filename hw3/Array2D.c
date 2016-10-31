@@ -14,6 +14,7 @@ void printArray(Array2D array) {
          printf("%d ", *p);
       }
    }
+   printf("\n");
 }
 
 // Serializes a 2DArray. Array is the array to serialize.
@@ -84,10 +85,11 @@ Array2D deseralizeInt2DArray(char* location, int** pointers) {
 }
 
 Array2DPayload_t getArray2D(Array2D array, int x, int y) {
-    if (array == NULL || x > array->rows + 1 || y > array->columns + 1 || x < 0 || y < 0) {
+    if (array == NULL || x > array->columns || y > array->rows || x < 0 || y < 0) {
         return (Array2DPayload_t) NULL;
     }
-    long* returnVal = array->head + y * (array->columns + 1) * PtrSize + x * PtrSize;
+    long* returnVal = (long*) array->head + y * (array->columns + 1) + x; //might not work
+    //long* returnVal = array->head + y * (array->columns + 1) * PtrSize + x * PtrSize; //works but has warnings
     return (Array2DPayload_t)(*returnVal);
 
 }
@@ -96,9 +98,8 @@ int swapArray2D(Array2D array, int x1, int y1, int x2, int y2) {
     if (array == NULL) {
         return 1;
     }
-    
-    if (x1 < 0 || y1 < 0 || x1 > array->rows + 1 || y1 > array->columns + 1 || x2 < 0 || y2 < 0 || x2 > array->rows + 1 || y2 >= array->columns + 1) {
-        return 2;
+    if (x1 < 0 || y1 < 0 || y1 > array->rows || x1 > array->columns || x2 < 0 || y2 < 0 || y2 > array->rows || x2 > array->columns){
+      return 2;
     }
 
     Array2DPayload_t p = getArray2D(array, x1, y1);
@@ -112,7 +113,7 @@ int setArray2D(Array2D array, Array2DPayload_t value, int x, int y) {
         return 1;
     }
     
-    if (x < 0 || y < 0 || x > array->rows + 1 || y > array->columns + 1) {
+    if (x < 0 || y < 0 || x > array->columns || y > array->rows) {
         return 2;
     }
 
@@ -148,9 +149,16 @@ void freeArray2D(Array2D array, Array2DPayloadFreeFnPtr payload_free_function) {
     if (array == NULL) {
         return;
     }
-    for (Array2DIndexPtr x = array->head; payload_free_function != NULL && x < array->head + array->rows * array->columns * PtrSize; x += PtrSize) {
+    
+    //might not work
+    for (Array2DIndexPtr x = array->head; payload_free_function != NULL && (long*) x < (long*) array->head + array->rows * array->columns; x = (long*) x + 1) {
         payload_free_function(x);
     }
+
+    /*
+    for (Array2DIndexPtr x = array->head; payload_free_function != NULL && x < array->head + array->rows * array->columns * PtrSize; x += PtrSize) {
+        payload_free_function(x);
+    } */ //definitely works but has warnings
     
     free(array->head);
     free(array);
