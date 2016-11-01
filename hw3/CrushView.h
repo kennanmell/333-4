@@ -2,12 +2,24 @@
 #ifndef _CView_h
 #define _CView_h
 
+//Prepares the view to be displayed. int gridSquareDimension
+//controls the size of the candies
 void prepareView(int gridSquareDimension);
 
+//Is called when a directional button is presssed.
+//Uses the currently selected candy and the pressed direction
+//to attempt a candy swap. If successful, the view will be redrawn.
+//widget is the button being pressed. data contains a string
+//representing that button's direction
 void directionPress(GtkWidget *widget, gpointer data);
 
+//Is called when a candy button is pressed. Changes the currently
+//selected candy. widget is the candy being pressed. data contains
+//a string representing the button's x, y location
 void candySelect(GtkWidget *widget, gpointer data);
 
+//Is called after main when the program is run with a command line argument (which should be all
+// the time). Sets up the window, view, and makes it visible.
 void g_application_open(GApplication *application, GFile **files, gint n_files, const gchar *hint);
 
 #endif
