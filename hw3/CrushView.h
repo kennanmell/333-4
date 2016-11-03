@@ -2,6 +2,12 @@
 #ifndef _CView_h
 #define _CView_h
 
+//to store coordinates associated with the buttons
+typedef struct pointStruct {
+    int x;
+    int y;
+} Point;
+
 //Prepares the view to be displayed. int gridSquareDimension
 //controls the size of the candies
 void prepareView(int gridSquareDimension);
@@ -22,5 +28,5 @@ void candySelect(GtkWidget *widget, gpointer data);
 // the time). Sets up the window, view, and makes it visible.
 void g_application_open(GApplication *application, GFile **files, gint n_files, const gchar *hint);
 
-#endif
+#endif /* _CView_h */
 

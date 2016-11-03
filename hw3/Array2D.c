@@ -45,11 +45,9 @@ int serializeInt2DArray(Array2D array, const char* location) {
 Array2D deseralizeInt2DArray(char* location, int** pointers) {
     json_error_t error;
     json_t* json = json_load_file(location, 0, &error);
-
     if(!json) {
         return NULL;
     }
-
     json_t* jRows = json_object_get(json, "rows");
 
    if (!json_is_integer(jRows)) {
@@ -61,7 +59,6 @@ Array2D deseralizeInt2DArray(char* location, int** pointers) {
    if (!json_is_integer(jColumns)) {
       return NULL;
    }
-
    int columns = json_integer_value(jColumns);
 
    Array2D array = allocateArray2D(rows, columns);   
@@ -70,9 +67,8 @@ Array2D deseralizeInt2DArray(char* location, int** pointers) {
    if (!json_is_array(jData)) {
       return NULL;
    }
-
    int arraySize = json_array_size(jData);
-   int* arr = malloc(arraySize);
+   int* arr = (int*) malloc(sizeof(int) * arraySize);
    *pointers = arr;
 
    for (int i = 0; i < arraySize; i++) {
@@ -88,8 +84,8 @@ Array2DPayload_t getArray2D(Array2D array, int x, int y) {
     if (array == NULL || x > array->columns || y > array->rows || x < 0 || y < 0) {
         return (Array2DPayload_t) NULL;
     }
-    long* returnVal = (long*) array->head + y * (array->columns + 1) + x; //might not work
-    //long* returnVal = array->head + y * (array->columns + 1) * PtrSize + x * PtrSize; //works but has warnings
+    long* returnVal = (long*) array->head + y * (array->columns + 1) + x;
+    //long* returnVal = array->head + y * (array->columns + 1) * PtrSize + x * PtrSize;
     return (Array2DPayload_t)(*returnVal);
 
 }
@@ -117,7 +113,7 @@ int setArray2D(Array2D array, Array2DPayload_t value, int x, int y) {
         return 2;
     }
 
-    long* index = (long*) array->head + y * (array->columns + 1) + x; //cast to ptr so no * ptr
+    long* index = (long*) array->head + y * (array->columns + 1) + x;
     *index = (long) value;
        
     return 0;
@@ -150,7 +146,7 @@ void freeArray2D(Array2D array, Array2DPayloadFreeFnPtr payload_free_function) {
         return;
     }
     
-    //might not work
+    
     for (Array2DIndexPtr x = array->head; payload_free_function != NULL && (long*) x < (long*) array->head + array->rows * array->columns; x = (long*) x + 1) {
         payload_free_function(x);
     }
@@ -158,7 +154,7 @@ void freeArray2D(Array2D array, Array2DPayloadFreeFnPtr payload_free_function) {
     /*
     for (Array2DIndexPtr x = array->head; payload_free_function != NULL && x < array->head + array->rows * array->columns * PtrSize; x += PtrSize) {
         payload_free_function(x);
-    } */ //definitely works but has warnings
+    } */
     
     free(array->head);
     free(array);

@@ -4,7 +4,8 @@
 #include "CrushModel.h"
 #include "CrushView.h"
 
-char* locationOfSelected;
+//char* locationOfSelected;
+Point* locationOfSelected;
 ModelData* md;
 GtkWidget* grid;
 GtkWidget* window;
@@ -49,8 +50,8 @@ void prepareView(int gridSquareDimension){
 void directionPress(GtkWidget *widget, gpointer data){
   int code;
   if (locationOfSelected != NULL){
-    int x = ((char*)locationOfSelected)[0] - '0';
-    int y = ((char*)locationOfSelected)[1] - '0';
+    int x = locationOfSelected->x;
+    int y = locationOfSelected->y;
     char dir = ((char*)data)[0];
     code = swapCandies(md, x, y, dir);
   }
@@ -73,7 +74,7 @@ void directionPress(GtkWidget *widget, gpointer data){
 
 // is called when a candy button is pressed
 void candySelect(GtkWidget *widget, gpointer data){
-  locationOfSelected = (char*) data;
+  locationOfSelected = (Point*) data;
 }
 
 //runs instead of activate when there's command line arguments
@@ -107,7 +108,9 @@ int main (int argc, char **argv){
 
   //set up the model
   Array2D arr = deseralizeInt2DArray(argv[1], &pointers);
+  
   Array2D points = allocateArray2D(arr->rows + 1, arr->columns + 1);
+  
   md = (ModelData*) malloc(sizeof(ModelData));
   md->arr = arr;
   md->points = points;
@@ -115,8 +118,9 @@ int main (int argc, char **argv){
 
   for (int i = 0; i <= md->arr->rows; i++) {
     for (int j = 0; j <= md->arr->columns; j++) {
-      char* coords = malloc(sizeof(char) * 2);
-      sprintf(coords, "%d%d", j, i);
+      Point* coords = malloc(sizeof(Point));
+      coords->x = j;
+      coords->y = i;
       setArray2D(md->points, coords, j, i);
     }
   }
@@ -135,5 +139,6 @@ int main (int argc, char **argv){
   freeArray2D(points, NULL);
   free(md);
   return status;
+  
 }
 
