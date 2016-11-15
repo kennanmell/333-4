@@ -10,7 +10,7 @@ void printArray(Array2D array) {
    printf("Array is %d x %d\n", array->rows + 1, array->columns + 1);
    for (int i = 0; i <= array->rows; i++) {
       for(int j = 0; j <= array->columns; j++) {
-         int* p = getArray2D(array, j, i);
+         int* p = (int*) getArray2D(array, j, i);
          printf("%d ", *p);
       }
       printf("\n");

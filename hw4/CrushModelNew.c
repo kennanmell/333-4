@@ -2,8 +2,10 @@
 #include "Array2D.h"
 #include <stdlib.h>
 
-/*
+
 class CrushModel {
+  public:
+
   int gameid; //unique identifier
   Array2D extensionColor; //the extension grid
   Array2D boardInitialState; //how many times each square must fire
@@ -14,30 +16,27 @@ class CrushModel {
   Array2D boardState; //how many times each square must fire
   int movesMade; //how many moves have been made
   int currentScore; //total amount that state has decreased
-  int extensionOffset[];
+  int* extensionOffset;
 
-  public:
-    CrushModel();
-
-};
-
-CrushModel::CrushModel(int gameid, Array2D extensionColor,
+CrushModel(int gameid, Array2D extensionColor,
 		       Array2D boardInitialState, int movesAllowed,
 		       int colors, Array2D boardCandies, Array2D boardState,
 		       int movesMade, int currentScore, 
 		       int extensionOffset[]){
 
-  this.gameid = gameid;
-  this.extensionColor = extensionColor;
-  this.boardInitialState = boardInitialState;
-  this.movesAllowed = movesAllowed;
-  this.colors = boardCandies;
-  this.boardState = boardState;
-  this.movesMade = movesMade;
-  this.currentScore = currentScore;
-  this.extensionOffset = extensionOffset;
+  this->gameid = gameid;
+  this->extensionColor = extensionColor;
+  this->boardInitialState = boardInitialState;
+  this->movesAllowed = movesAllowed;
+  this->colors = colors;
+  this->boardCandies = boardCandies;
+  this->boardState = boardState;
+  this->movesMade = movesMade;
+  this->currentScore = currentScore;
+  this->extensionOffset = extensionOffset;
 }
-*/
+
+};
 
 Array2D deserializeInt2DArrayFromJsonObject(json_t* json) {
    json_t* jRows = json_object_get(json, "rows");
@@ -75,13 +74,13 @@ Array2D deserializeBoardCandiesFromJsonObject(json_t* json) {
    json_t* jRows = json_object_get(json, "rows");
 
    if (!json_is_integer(jRows)) {
-      return NULL;
+      return nullptr;
    }
    int rows = json_integer_value(jRows);
 
    json_t* jColumns = json_object_get(json, "columns");
    if (!json_is_integer(jColumns)) {
-      return NULL;
+      return nullptr;
    }
    int columns = json_integer_value(jColumns);
 
@@ -89,7 +88,7 @@ Array2D deserializeBoardCandiesFromJsonObject(json_t* json) {
 
    json_t* jData = json_object_get(json, "data");
    if (!json_is_array(jData)) {
-      return NULL;
+      return nullptr;
    }
    int arraySize = json_array_size(jData);
    int* arr = (int*) malloc(sizeof(int) * arraySize);
@@ -104,11 +103,11 @@ Array2D deserializeBoardCandiesFromJsonObject(json_t* json) {
 }
 
 
-void deserializeGameInstance(char* location){
+CrushModel* deserializeGameInstance(char* location){
   json_error_t error;
   json_t* json = json_load_file(location, 0, &error);
   if (!json){
-    return NULL;
+    return nullptr;
   }
   //game def
   json_t* gameDef = json_object_get(json, "gamedef");
@@ -144,7 +143,7 @@ void deserializeGameInstance(char* location){
   json_t* gameState = json_object_get(json, "gamestate");
   Array2D boardCandies, boardState;
   int movesMade, currentScore, *extensionOffset;
-  if (gameState != NULL){
+  if (gameState != nullptr){
     printf("Not null!\n");
     
     //boardCandies
@@ -172,11 +171,11 @@ void deserializeGameInstance(char* location){
     //extension offest
     json_t* jExtensionOffset = json_object_get(gameState, "extensionoffset");
     extensionOffset = (int*) malloc(sizeof(int) * json_array_size(jExtensionOffset));
-    for (int i = 0; i < json_array_size(jExtensionOffset); i++){
+    for (int i = 0; i < (int) json_array_size(jExtensionOffset); i++){
       extensionOffset[i] = json_integer_value(json_array_get(jExtensionOffset, i));
     }
     printf("extension offset:\n");
-    for (int i = 0; i < json_array_size(jExtensionOffset); i++){
+    for (int i = 0; i < (int) json_array_size(jExtensionOffset); i++){
       printf("%d ", extensionOffset[i]);
     }
     printf("\n");
@@ -221,10 +220,14 @@ void deserializeGameInstance(char* location){
     }
     printf("\n");
   }
+
+  CrushModel* result = new CrushModel(gameid, extensionColor, boardInitialState, movesAllowed, colors, boardCandies, boardState, movesMade, currentScore, extensionOffset);
+  return result;
 }
 
 
 
 int main(int argc, char** argv){
-  deserializeGameInstance(argv[1]);
+  CrushModel *m = deserializeGameInstance(argv[1]);
+  printf("%d", m->gameid);
 }
