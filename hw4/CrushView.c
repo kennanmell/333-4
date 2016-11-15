@@ -17,7 +17,7 @@ void prepareView(int gridSquareDimension){
   for (int i = 0; i <= md->arr->rows; i++) {
     for (int j = 0; j <= md->arr->columns; j++) {
       int* x = (int*) getArray2D(md->arr, j, i);
-      char* disp = malloc(sizeof(char));
+      char* disp = (char*) malloc(sizeof(char));
       sprintf(disp, "%d", *x);
       button = gtk_button_new_with_label(disp);
       g_signal_connect(button, "clicked", (GCallback) candySelect, (gpointer) getArray2D(md->points, j, i));
@@ -97,28 +97,21 @@ void g_application_open(GApplication *application, GFile **files, gint n_files,
   gtk_widget_show_all(window);
 }
 
-int main (int argc, char **argv){
-  if (argc != 2){
-      printf("Error: provide a single json file\n");
-    return 1;
-  }
+int runner (Array2D arr, int moves, int argc, char** argv) {
   GtkApplication *app;
   int status;
-  int* pointers;
 
   //set up the model
-  Array2D arr = deseralizeInt2DArray(argv[1], &pointers);
-  
   Array2D points = allocateArray2D(arr->rows + 1, arr->columns + 1);
   
   md = (ModelData*) malloc(sizeof(ModelData));
   md->arr = arr;
   md->points = points;
-  md->moves = 30;
+  md->moves = moves;
 
   for (int i = 0; i <= md->arr->rows; i++) {
     for (int j = 0; j <= md->arr->columns; j++) {
-      Point* coords = malloc(sizeof(Point));
+      Point* coords = (Point*) malloc(sizeof(Point));
       coords->x = j;
       coords->y = i;
       setArray2D(md->points, coords, j, i);
@@ -135,7 +128,6 @@ int main (int argc, char **argv){
       free(getArray2D(md->points, j, i));
     }
   }
-  free(pointers);
   freeArray2D(points, NULL);
   free(md);
   return status;

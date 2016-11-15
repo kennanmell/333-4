@@ -1,4 +1,4 @@
-SRC=CrushModelNew.c Array2D.c CrushModel.c  # change these to your source file names
+SRC=CrushModelNew.c Array2D.c CrushModel.c CrushView.c  # change these to your source file names
 HEADERS=CrushView.h Array2D.h CrushModel.h  # c 
 CFLAGS = -Wall -Wpedantic -std=c++11
 IFLAGS =  -I../hw2 -I../jansson/include

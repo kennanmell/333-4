@@ -1,7 +1,7 @@
 #include <jansson.h>
 #include "Array2D.h"
 #include <stdlib.h>
-
+#include "CrushView.h"
 
 class CrushModel {
   public:
@@ -229,5 +229,6 @@ CrushModel* deserializeGameInstance(char* location){
 
 int main(int argc, char** argv){
   CrushModel *m = deserializeGameInstance(argv[1]);
-  printf("%d", m->gameid);
+  int result = runner(m->boardCandies, m->movesAllowed, argc, argv);
+  return result;
 }
