@@ -5,7 +5,7 @@
 
 class CrushModel {
   public:
-
+  int neg = -1; // used to represent a template that needs to be fired
   int gameid; //unique identifier
   Array2D extensionColor; //the extension grid
   Array2D boardInitialState; //how many times each square must fire
@@ -36,7 +36,110 @@ CrushModel(int gameid, Array2D extensionColor,
   this->extensionOffset = extensionOffset;
 }
 
+void updateWithMove(int x1, int y1, int x2, int y2) {
+  if (movesMade >= movesAllowed) {
+    // Too many moves made, can't do anything.
+    return;
+  }
+
+  swapArray2D(this->boardCandies, x1, y1, x2, y2);
+
+  int found = 0;
+  while (this->findTemplates()) {
+    found = 1;
+    this->fireTemplates();
+  }
+
+  if (found) {
+    // Move made successfully, increase count.
+    movesMade++;
+  } else {
+    // No templates made so move is invalid.
+    swapArray2D(this->boardCandies, x1, y1, x2, y2);
+  }
+}
+
+void fireTemplates() {
+  for (int i = this->boardCandies->rows; i >= 0; i--) {
+    for (int j = 0; j <= this->boardCandies->columns; j++) {
+      if (*((int *) getArray2D(this->boardCandies, j, i)) == neg) {
+        int k = i;
+        for (; k < this->boardCandies->rows; k++) {
+          swapArray2D(this->boardCandies, j, k, j, k + 1);
+        }
+
+        setArray2D(this->boardCandies, getArray2D(extensionColor, j, extensionOffset[j] - 1), j, k);
+        extensionOffset[j] += 1;
+        if (extensionOffset[j] > extensionColor->rows) {
+          extensionOffset[j] = 0;
+        }
+      }
+    }
+  }
+}
+
+// Finds all existing templates on the board. Returns 1 if it finds at least one template, 0 if none are found. Sets all tiles on the board included in a template to neg, indicating that they are ready to fire using fireTemplates.
+int findTemplates() {
+  int result = 0;
+  
+  // Vertical 4-in-a-row
+  for (int i = 0; i <= this->boardCandies->rows; i++) {
+    for (int j = 0; j <= this->boardCandies->columns - 3; j++) {
+      int curr = *((int*)getArray2D(this->boardCandies, i, j));
+      if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, i, j + 1)) && curr == *((int*)getArray2D(this->boardCandies, i, j + 2)) && curr == *((int*)getArray2D(this->boardCandies, i, j + 3))) {
+        result = 1;
+        setArray2D(this->boardCandies, &neg, i, j);
+        setArray2D(this->boardCandies, &neg, i, j + 1);
+        setArray2D(this->boardCandies, &neg, i, j + 2);
+        setArray2D(this->boardCandies, &neg, i, j + 3);
+      }
+    }
+  }
+
+  // Horizontal 4-in-a-row
+  for (int i = 0; i <= this->boardCandies->rows - 3; i++) {
+    for (int j = 0; j <= this->boardCandies->columns; j++) {
+      int curr = *((int*)getArray2D(this->boardCandies, i, j));
+      if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, i + 1, j)) && curr == *((int*)getArray2D(this->boardCandies, i + 2, j)) && curr == *((int*)getArray2D(this->boardCandies, i + 3, j))) {
+        result = 1;
+        setArray2D(this->boardCandies, &neg, i, j);
+        setArray2D(this->boardCandies, &neg, i + 1, j);
+        setArray2D(this->boardCandies, &neg, i + 2, j);
+        setArray2D(this->boardCandies, &neg, i + 3, j);
+      }
+    }
+  }
+ 
+  // Vertical 3-in-a-row
+  for (int i = 0; i <= this->boardCandies->rows; i++) {
+    for (int j = 0; j <= this->boardCandies->columns - 2; j++) {
+      int curr = *((int*)getArray2D(this->boardCandies, i, j));
+      if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, i, j + 1)) && curr == *((int*)getArray2D(this->boardCandies, i, j + 2))) {
+        result = 1;
+        setArray2D(this->boardCandies, &neg, i, j);
+        setArray2D(this->boardCandies, &neg, i, j + 1);
+        setArray2D(this->boardCandies, &neg, i, j + 2);
+      }
+    }
+  }
+
+  // Horizontal 3-in-a-row
+  for (int i = 0; i <= this->boardCandies->rows - 2; i++) {
+    for (int j = 0; j <= this->boardCandies->columns; j++) {
+      int curr = *((int*)getArray2D(this->boardCandies, i, j));
+      if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, i + 1, j)) && curr == *((int*)getArray2D(this->boardCandies, i + 2, j))) {
+        result = 1;
+        setArray2D(this->boardCandies, &neg, i, j);
+        setArray2D(this->boardCandies, &neg, i + 1, j);
+        setArray2D(this->boardCandies, &neg, i + 2, j);
+      }
+    }
+  }
+  return result;
+}
 };
+
+CrushModel *m;
 
 Array2D deserializeInt2DArrayFromJsonObject(json_t* json) {
    json_t* jRows = json_object_get(json, "rows");
@@ -225,10 +328,12 @@ CrushModel* deserializeGameInstance(char* location){
   return result;
 }
 
-
+void instanceCaller(int x1, int y1, int x2, int y2) {
+  m->updateWithMove(x1, y1, x2, y2);
+}
 
 int main(int argc, char** argv){
-  CrushModel *m = deserializeGameInstance(argv[1]);
-  int result = runner(m->boardCandies, m->movesAllowed, argc, argv);
+  m = deserializeGameInstance(argv[1]);
+  int result = runner(m->boardCandies, m->movesAllowed, &instanceCaller, argc, argv);
   return result;
 }

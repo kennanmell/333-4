@@ -29,7 +29,7 @@ void candySelect(GtkWidget *widget, gpointer data);
 void g_application_open(GApplication *application, GFile **files, gint n_files, const gchar *hint);
 
 // Runs the game.
-int runner(Array2D arr, int moves, int argc, char** argv);
+int runner(Array2D arr, int moves, void (*instanceCaller)(int, int, int, int), int argc, char** argv);
 
 #endif /* _CView_h */
 

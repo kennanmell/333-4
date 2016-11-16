@@ -9,6 +9,7 @@ Point* locationOfSelected;
 ModelData* md;
 GtkWidget* grid;
 GtkWidget* window;
+void (*swapHelper)(int, int, int, int);
 
 void prepareView(int gridSquareDimension){
 
@@ -21,7 +22,7 @@ void prepareView(int gridSquareDimension){
       sprintf(disp, "%d", *x);
       button = gtk_button_new_with_label(disp);
       g_signal_connect(button, "clicked", (GCallback) candySelect, (gpointer) getArray2D(md->points, j, i));
-      gtk_grid_attach(GTK_GRID(grid), button, gridSquareDimension * j, gridSquareDimension * i, gridSquareDimension, gridSquareDimension);
+      gtk_grid_attach(GTK_GRID(grid), button, gridSquareDimension * j, gridSquareDimension * md->arr->rows - gridSquareDimension * i, gridSquareDimension, gridSquareDimension);
       free(disp);
     }
   }
@@ -48,12 +49,21 @@ void prepareView(int gridSquareDimension){
 
 // is called when a directional button is pressed
 void directionPress(GtkWidget *widget, gpointer data){
-  int code;
+  int code = 0;
   if (locationOfSelected != NULL){
     int x = locationOfSelected->x;
     int y = locationOfSelected->y;
     char dir = ((char*)data)[0];
-    code = swapCandies(md, x, y, dir);
+    if (dir == 'u') {
+       swapHelper(x, y, x, y + 1);
+    } else if (dir == 'd') {
+       swapHelper(x, y, x, y - 1);
+    } else if (dir == 'l') {
+       swapHelper(x, y, x - 1, y);
+    } else {
+       swapHelper(x, y, x + 1, y);
+    }
+    //code = swapCandies(md, x, y, dir);
   }
 
   if (code == 0){ //swap success
@@ -97,13 +107,14 @@ void g_application_open(GApplication *application, GFile **files, gint n_files,
   gtk_widget_show_all(window);
 }
 
-int runner (Array2D arr, int moves, int argc, char** argv) {
+int runner (Array2D arr, int moves, void (*instanceCaller)(int, int, int, int), int argc, char** argv) {
   GtkApplication *app;
   int status;
-
+  
   //set up the model
   Array2D points = allocateArray2D(arr->rows + 1, arr->columns + 1);
-  
+  swapHelper = instanceCaller;
+
   md = (ModelData*) malloc(sizeof(ModelData));
   md->arr = arr;
   md->points = points;
