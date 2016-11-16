@@ -6,6 +6,7 @@
 typedef struct model_holder {
     Array2D arr;
     Array2D points;
+    Array2D state;
     int moves;
 } ModelData;
 

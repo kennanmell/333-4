@@ -22,8 +22,12 @@ void prepareView(int gridSquareDimension){
   for (int i = 0; i <= md->arr->rows; i++) {
     for (int j = 0; j <= md->arr->columns; j++) {
       int* x = (int*) getArray2D(md->arr, j, i);
-      char* disp = (char*) malloc(sizeof(char));
-      sprintf(disp, "%d", *x);
+      char* disp = (char*) malloc(sizeof(char) * 2);
+      if (*((int*)getArray2D(md->state, j, i)) == 0){
+	sprintf(disp, "%d*", *x);
+      } else {
+	sprintf(disp, "%d", *x);
+      }
       button = gtk_button_new_with_label(disp);
       g_signal_connect(button, "clicked", (GCallback) candySelect, (gpointer) getArray2D(md->points, j, i));
       gtk_grid_attach(GTK_GRID(grid), button, gridSquareDimension * j, gridSquareDimension * md->arr->rows - gridSquareDimension * i, gridSquareDimension, gridSquareDimension);
@@ -127,7 +131,7 @@ void g_application_open(GApplication *application, GFile **files, gint n_files,
   gtk_widget_show_all(window);
 }
 
-int runner (Array2D arr, int* moves, int* score, void (*instanceCaller)(int, int, int, int), 
+int runner (Array2D arr, Array2D state, int* moves, int* score, void (*instanceCaller)(int, int, int, int), 
 	    void (*serializer)(char*), int argc, char** argv) {
   GtkApplication *app;
   int status;
@@ -143,6 +147,7 @@ int runner (Array2D arr, int* moves, int* score, void (*instanceCaller)(int, int
   md->arr = arr;
   md->points = points;
   md->moves = 0; // no longer used
+  md->state = state;
 
   for (int i = 0; i <= md->arr->rows; i++) {
     for (int j = 0; j <= md->arr->columns; j++) {

@@ -424,7 +424,7 @@ int main(int argc, char** argv){
   if (found) {
     m->movesMade -= 1;
   }
-  int result = runner(m->boardCandies, &(m->movesMade), &(m->currentScore), &instanceCaller,
+  int result = runner(m->boardCandies, m->boardState, &(m->movesMade), &(m->currentScore), &instanceCaller,
 		      &serializeGameInstance, argc, argv);
   return result;
 }
