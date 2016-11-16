@@ -9,8 +9,11 @@ Point* locationOfSelected;
 ModelData* md;
 GtkWidget* grid;
 GtkWidget* window;
+int* movesPtr;
+int* scorePtr;
 void (*swapHelper)(int, int, int, int);
 
+// Prepares (draws) the view.
 void prepareView(int gridSquareDimension){
 
   GtkWidget *button;
@@ -29,22 +32,28 @@ void prepareView(int gridSquareDimension){
 
   button = gtk_button_new_with_label("Left");
   g_signal_connect (button, "clicked", (GCallback) directionPress, (gpointer) "l"); //left
-  gtk_grid_attach(GTK_GRID(grid), button, gridSquareDimension * (md->arr->columns + 1) + 10, 60, 100, 60);
+  gtk_grid_attach(GTK_GRID(grid), button, gridSquareDimension * (md->arr->columns + 1) + 10, 0, 100, 60);
   button = gtk_button_new_with_label("Right");
   g_signal_connect (button, "clicked", (GCallback) directionPress, (gpointer) "r"); //right
-  gtk_grid_attach(GTK_GRID(grid), button, gridSquareDimension * (md->arr->columns + 1) + 10, 120, 100, 60);
+  gtk_grid_attach(GTK_GRID(grid), button, gridSquareDimension * (md->arr->columns + 1) + 10, 60, 100, 60);
   button = gtk_button_new_with_label("Up");
   g_signal_connect (button, "clicked", (GCallback) directionPress, (gpointer) "u"); //up
-  gtk_grid_attach(GTK_GRID(grid), button, gridSquareDimension * (md->arr->columns + 1) + 10, 180, 100, 60);
+  gtk_grid_attach(GTK_GRID(grid), button, gridSquareDimension * (md->arr->columns + 1) + 10, 120, 100, 60);
   button = gtk_button_new_with_label("Down");
   g_signal_connect (button, "clicked", (GCallback) directionPress, (gpointer) "d"); //down
-  gtk_grid_attach(GTK_GRID(grid), button, gridSquareDimension * (md->arr->columns + 1) + 10, 240, 100, 60);
+  gtk_grid_attach(GTK_GRID(grid), button, gridSquareDimension * (md->arr->columns + 1) + 10, 180, 100, 60);
 
-  char* moveText = (char*) malloc(sizeof(char) * 23);
-  sprintf(moveText, "You have %d moves left", md->moves);
+  char* moveText = (char*) malloc(sizeof(char) * 12);
+  sprintf(moveText, "Moves: %d", *movesPtr);
   GtkWidget* moveTextLabel = gtk_label_new(moveText);
-  gtk_grid_attach(GTK_GRID(grid), moveTextLabel, gridSquareDimension * (md->arr->columns + 1) + 10, 0, 100, 60);
+  gtk_grid_attach(GTK_GRID(grid), moveTextLabel, 20, gridSquareDimension * (md->arr->rows + 1) + 10, 100, 60);
   free(moveText);
+
+  char* scoreText = (char*) malloc(sizeof(char) * 12);
+  sprintf(scoreText, "Score: %d", *scorePtr);
+  GtkWidget* scoreTextLabel = gtk_label_new(scoreText);
+  gtk_grid_attach(GTK_GRID(grid), scoreTextLabel, 120, gridSquareDimension * (md->arr->rows + 1) + 10, 100, 60);
+  free(scoreText);
 }
 
 // is called when a directional button is pressed
@@ -107,18 +116,20 @@ void g_application_open(GApplication *application, GFile **files, gint n_files,
   gtk_widget_show_all(window);
 }
 
-int runner (Array2D arr, int moves, void (*instanceCaller)(int, int, int, int), int argc, char** argv) {
+int runner (Array2D arr, int* moves, int* score, void (*instanceCaller)(int, int, int, int), int argc, char** argv) {
   GtkApplication *app;
   int status;
   
   //set up the model
   Array2D points = allocateArray2D(arr->rows + 1, arr->columns + 1);
   swapHelper = instanceCaller;
+  movesPtr = moves;
+  scorePtr = score;
 
   md = (ModelData*) malloc(sizeof(ModelData));
   md->arr = arr;
   md->points = points;
-  md->moves = moves;
+  md->moves = 0; // no longer used
 
   for (int i = 0; i <= md->arr->rows; i++) {
     for (int j = 0; j <= md->arr->columns; j++) {
@@ -133,7 +144,7 @@ int runner (Array2D arr, int moves, void (*instanceCaller)(int, int, int, int), 
   g_signal_connect (app, "open", G_CALLBACK (g_application_open), NULL);
   status = g_application_run (G_APPLICATION (app), argc, argv);
   g_object_unref (app);
-  freeArray2D(arr, NULL);
+  //freeArray2D(arr, NULL);
   for (int i = 0; i <= md->arr->rows; i++) {
     for (int j = 0; j <= md->arr->columns; j++) {
       free(getArray2D(md->points, j, i));

@@ -36,17 +36,19 @@ CrushModel(int gameid, Array2D extensionColor,
   this->extensionOffset = extensionOffset;
 }
 
-void updateWithMove(int x1, int y1, int x2, int y2) {
+// Repeats the process of finding and firing templates until no templates are found. Updates moves remaining, etc. accordingly. Returns the number of templates found.
+int updateWithMove(int x1, int y1, int x2, int y2) {
   if (movesMade >= movesAllowed) {
     // Too many moves made, can't do anything.
-    return;
+    return 0;
   }
 
   swapArray2D(this->boardCandies, x1, y1, x2, y2);
 
   int found = 0;
-  while (this->findTemplates()) {
-    found = 1;
+  int arbitraryMagicNumber = 1000; // max template firings per move
+  while (found < arbitraryMagicNumber && this->findTemplates()) {
+    found += 1;
     this->fireTemplates();
   }
 
@@ -57,8 +59,11 @@ void updateWithMove(int x1, int y1, int x2, int y2) {
     // No templates made so move is invalid.
     swapArray2D(this->boardCandies, x1, y1, x2, y2);
   }
+
+  return found;
 }
 
+// Removes all tiles on the board marked as neg, and applies gravity using the extension board. Also updates the score.
 void fireTemplates() {
   for (int i = this->boardCandies->rows; i >= 0; i--) {
     for (int j = 0; j <= this->boardCandies->columns; j++) {
@@ -68,11 +73,16 @@ void fireTemplates() {
           swapArray2D(this->boardCandies, j, k, j, k + 1);
         }
 
-        setArray2D(this->boardCandies, getArray2D(extensionColor, j, extensionOffset[j] - 1), j, k);
-        extensionOffset[j] += 1;
-        if (extensionOffset[j] > extensionColor->rows) {
-          extensionOffset[j] = 0;
+        setArray2D(this->boardCandies, getArray2D(extensionColor, j, (extensionOffset[j] - 1) % (extensionColor->rows + 1)), j, k);
+
+        // Update score.
+        int* remaining = (int*) getArray2D(this->boardState, j, i);
+        if (*remaining != 0) {
+          *remaining = *remaining - 1;
+          currentScore += 1;
         }
+
+        extensionOffset[j] += 1;
       }
     }
   }
@@ -300,7 +310,12 @@ CrushModel* deserializeGameInstance(char* location){
   
 
     //board state
-    boardState = boardInitialState;
+    boardState = allocateArray2D(boardCandiesColumns, boardCandiesRows);
+    for (int i = 0; i < boardCandiesRows; i++) {
+      for (int j = 0; j < boardCandiesColumns; j++) {
+        setArray2D(boardState, getArray2D(boardInitialState, j, i), j, i);
+      }
+    }
     printf("board state:\n");
     printArray(boardState);
 
@@ -334,6 +349,10 @@ void instanceCaller(int x1, int y1, int x2, int y2) {
 
 int main(int argc, char** argv){
   m = deserializeGameInstance(argv[1]);
-  int result = runner(m->boardCandies, m->movesAllowed, &instanceCaller, argc, argv);
+  int found = m->updateWithMove(0, 0, 0, 0); // Make sure the initial game state is settled.
+  if (found) {
+    m->movesMade -= 1;
+  }
+  int result = runner(m->boardCandies, &(m->movesMade), &(m->currentScore), &instanceCaller, argc, argv);
   return result;
 }
