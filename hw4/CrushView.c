@@ -12,6 +12,7 @@ GtkWidget* window;
 int* movesPtr;
 int* scorePtr;
 void (*swapHelper)(int, int, int, int);
+void (*serializeHelper)(char*);
 
 // Prepares (draws) the view.
 void prepareView(int gridSquareDimension){
@@ -43,6 +44,10 @@ void prepareView(int gridSquareDimension){
   g_signal_connect (button, "clicked", (GCallback) directionPress, (gpointer) "d"); //down
   gtk_grid_attach(GTK_GRID(grid), button, gridSquareDimension * (md->arr->columns + 1) + 10, 180, 100, 60);
 
+  button = gtk_button_new_with_label("serialize");
+  g_signal_connect (button, "clicked", (GCallback) serializeBoard, (gpointer) "output.json");
+  gtk_grid_attach(GTK_GRID(grid), button, gridSquareDimension * (md->arr->columns + 1) + 10, 240, 100, 60);
+
   char* moveText = (char*) malloc(sizeof(char) * 12);
   sprintf(moveText, "Moves: %d", *movesPtr);
   GtkWidget* moveTextLabel = gtk_label_new(moveText);
@@ -54,6 +59,12 @@ void prepareView(int gridSquareDimension){
   GtkWidget* scoreTextLabel = gtk_label_new(scoreText);
   gtk_grid_attach(GTK_GRID(grid), scoreTextLabel, 120, gridSquareDimension * (md->arr->rows + 1) + 10, 100, 60);
   free(scoreText);
+}
+
+//is called when serialize is pressed
+void serializeBoard(GtkWidget *widget, gpointer data){
+  char* outputLocation = (char*) data;
+  serializeHelper(outputLocation);
 }
 
 // is called when a directional button is pressed
@@ -116,13 +127,15 @@ void g_application_open(GApplication *application, GFile **files, gint n_files,
   gtk_widget_show_all(window);
 }
 
-int runner (Array2D arr, int* moves, int* score, void (*instanceCaller)(int, int, int, int), int argc, char** argv) {
+int runner (Array2D arr, int* moves, int* score, void (*instanceCaller)(int, int, int, int), 
+	    void (*serializer)(char*), int argc, char** argv) {
   GtkApplication *app;
   int status;
   
   //set up the model
   Array2D points = allocateArray2D(arr->rows + 1, arr->columns + 1);
   swapHelper = instanceCaller;
+  serializeHelper = serializer;
   movesPtr = moves;
   scorePtr = score;
 

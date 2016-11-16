@@ -338,9 +338,76 @@ CrushModel* deserializeGameInstance(char* location){
     }
     printf("\n");
   }
-
   CrushModel* result = new CrushModel(gameid, extensionColor, boardInitialState, movesAllowed, colors, boardCandies, boardState, movesMade, currentScore, extensionOffset);
   return result;
+}
+
+json_t* serializeArray2DToJsonObject(Array2D array){
+  json_t* out = json_object();
+  json_t* jArr = json_array();
+  for (int i = 0; i <= array->rows; i++) {
+     for (int j = 0; j <= array->columns; j++) {
+        int* curr = (int*) getArray2D(array,j, i);
+        json_array_append_new(jArr, json_integer(*curr));
+     }
+  }
+
+  json_object_set_new(out, "rows", json_integer(array->rows + 1));
+  json_object_set_new(out, "columns", json_integer(array->columns + 1));
+  json_object_set_new(out, "data", jArr);
+  return out;
+}
+
+json_t* serializeBoardCandiesToJsonObject(Array2D array){
+  json_t* out = json_object();
+  json_t* jArr = json_array();
+  for (int i = 0; i <= array->rows; i++) {
+     for (int j = 0; j <= array->columns; j++) {
+        int* curr = (int*) getArray2D(array,j, i);
+	json_t* index = json_object();
+	json_object_set_new(index, "color", json_integer(*curr));
+	json_object_set_new(index, "type", json_integer(0));
+        json_array_append_new(jArr, index);
+     }
+  }
+
+  json_object_set_new(out, "rows", json_integer(array->rows + 1));
+  json_object_set_new(out, "columns", json_integer(array->columns + 1));
+  json_object_set_new(out, "data", jArr);
+  return out;
+}
+
+void serializeGameInstance(char* location){
+  CrushModel* model = m;
+  json_t* out = json_object();
+
+  //gameDef
+  json_t* jGameDef = json_object();
+  json_object_set_new(jGameDef, "gameid", json_integer(model->gameid));
+  json_t* jExtensionColor = serializeArray2DToJsonObject(model->extensionColor);
+  json_object_set_new(jGameDef, "extensioncolor", jExtensionColor);
+  json_t* jBoardInitialState = serializeArray2DToJsonObject(model->boardInitialState);
+  json_object_set_new(jGameDef, "boardstate", jBoardInitialState);
+  json_object_set_new(jGameDef,"movesallowed", json_integer(model->movesAllowed));
+  json_object_set_new(jGameDef, "colors", json_integer(model->colors));
+  json_object_set_new(out, "gamedef", jGameDef);
+
+  //gameState
+  json_t* jGameState = json_object();
+  json_t* jBoardCandies = serializeBoardCandiesToJsonObject(model->boardCandies);
+  json_object_set_new(jGameState, "boardcandies", jBoardCandies);
+  json_t* jBoardState = serializeArray2DToJsonObject(model->boardState);
+  json_object_set_new(jGameState, "boardstate", jBoardState);
+  json_object_set_new(jGameState, "movesmade", json_integer(model->movesMade));
+  json_object_set_new(jGameState, "currentscore", json_integer(model->currentScore));
+  json_t* jExtensionOffset = json_array();
+  for (int i = 0; i <= model->extensionColor->columns; i++){
+    json_array_append_new(jExtensionOffset, json_integer(model->extensionOffset[i]));
+  }
+  json_object_set_new(jGameState, "extensionoffset", jExtensionOffset);
+  json_object_set_new(out, "gamestate", jGameState);
+  int result = json_dump_file(out, location, 0);
+  json_decref(out);
 }
 
 void instanceCaller(int x1, int y1, int x2, int y2) {
@@ -348,11 +415,16 @@ void instanceCaller(int x1, int y1, int x2, int y2) {
 }
 
 int main(int argc, char** argv){
+  if (argc != 2){
+    printf("provide a single json file to take in\n");
+    return 1;
+  }
   m = deserializeGameInstance(argv[1]);
   int found = m->updateWithMove(0, 0, 0, 0); // Make sure the initial game state is settled.
   if (found) {
     m->movesMade -= 1;
   }
-  int result = runner(m->boardCandies, &(m->movesMade), &(m->currentScore), &instanceCaller, argc, argv);
+  int result = runner(m->boardCandies, &(m->movesMade), &(m->currentScore), &instanceCaller,
+		      &serializeGameInstance, argc, argv);
   return result;
 }

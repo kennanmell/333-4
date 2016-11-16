@@ -24,12 +24,16 @@ void directionPress(GtkWidget *widget, gpointer data);
 //a string representing the button's x, y location
 void candySelect(GtkWidget *widget, gpointer data);
 
+//Is called when serialize is pressed. Will serialize the current
+//game to output.json
+void serializeBoard(GtkWidget *widget, gpointer data);
+
 //Is called after main when the program is run with a command line argument (which should be all
 // the time). Sets up the window, view, and makes it visible.
 void g_application_open(GApplication *application, GFile **files, gint n_files, const gchar *hint);
 
 // Runs the game.
-int runner(Array2D arr, int* moves, int* score, void (*instanceCaller)(int, int, int, int), int argc, char** argv);
+int runner(Array2D arr, int* moves, int* score, void (*instanceCaller)(int, int, int, int), void (*serializer)(char*), int argc, char** argv);
 
 #endif /* _CView_h */
 
