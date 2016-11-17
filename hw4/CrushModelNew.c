@@ -54,7 +54,6 @@ int updateWithMove(int x1, int y1, int x2, int y2) {
     found += 1;
     this->fireTemplates();
   }
-
   if (found) {
     // Move made successfully, increase count.
     movesMade++;
@@ -94,60 +93,61 @@ void fireTemplates() {
 // Finds all existing templates on the board. Returns 1 if it finds at least one template, 0 if none are found. Sets all tiles on the board included in a template to neg, indicating that they are ready to fire using fireTemplates.
 int findTemplates() {
   int result = 0;
-  
+
   // Vertical 4-in-a-row
-  for (int i = 0; i <= this->boardCandies->rows; i++) {
-    for (int j = 0; j <= this->boardCandies->columns - 3; j++) {
-      int curr = *((int*)getArray2D(this->boardCandies, i, j));
-      if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, i, j + 1)) && curr == *((int*)getArray2D(this->boardCandies, i, j + 2)) && curr == *((int*)getArray2D(this->boardCandies, i, j + 3))) {
+  for (int i = 0; i <= this->boardCandies->rows - 3; i++) {
+    for (int j = 0; j <= this->boardCandies->columns; j++) {
+      int curr = *((int*)getArray2D(this->boardCandies, j, i));
+      if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, j, i + 1)) && curr == *((int*)getArray2D(this->boardCandies, j, i + 2)) && curr == *((int*)getArray2D(this->boardCandies, j, i + 3))) {
         result = 1;
-        setArray2D(this->boardCandies, &neg, i, j);
-        setArray2D(this->boardCandies, &neg, i, j + 1);
-        setArray2D(this->boardCandies, &neg, i, j + 2);
-        setArray2D(this->boardCandies, &neg, i, j + 3);
+        setArray2D(this->boardCandies, &neg, j, i);
+        setArray2D(this->boardCandies, &neg, j, i + 1);
+        setArray2D(this->boardCandies, &neg, j, i + 2);
+        setArray2D(this->boardCandies, &neg, j, i + 3);
       }
     }
   }
 
   // Horizontal 4-in-a-row
-  for (int i = 0; i <= this->boardCandies->rows - 3; i++) {
-    for (int j = 0; j <= this->boardCandies->columns; j++) {
-      int curr = *((int*)getArray2D(this->boardCandies, i, j));
-      if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, i + 1, j)) && curr == *((int*)getArray2D(this->boardCandies, i + 2, j)) && curr == *((int*)getArray2D(this->boardCandies, i + 3, j))) {
-        result = 1;
-        setArray2D(this->boardCandies, &neg, i, j);
-        setArray2D(this->boardCandies, &neg, i + 1, j);
-        setArray2D(this->boardCandies, &neg, i + 2, j);
-        setArray2D(this->boardCandies, &neg, i + 3, j);
-      }
-    }
-  }
- 
-  // Vertical 3-in-a-row
   for (int i = 0; i <= this->boardCandies->rows; i++) {
-    for (int j = 0; j <= this->boardCandies->columns - 2; j++) {
-      int curr = *((int*)getArray2D(this->boardCandies, i, j));
-      if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, i, j + 1)) && curr == *((int*)getArray2D(this->boardCandies, i, j + 2))) {
+    for (int j = 0; j <= this->boardCandies->columns - 3; j++) {
+      int curr = *((int*)getArray2D(this->boardCandies, j, i));
+      if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, j + 1, i)) && curr == *((int*)getArray2D(this->boardCandies, j + 2, i)) && curr == *((int*)getArray2D(this->boardCandies, j + 3, i))) {
         result = 1;
-        setArray2D(this->boardCandies, &neg, i, j);
-        setArray2D(this->boardCandies, &neg, i, j + 1);
-        setArray2D(this->boardCandies, &neg, i, j + 2);
+        setArray2D(this->boardCandies, &neg, j, i);
+        setArray2D(this->boardCandies, &neg, j + 1, i);
+        setArray2D(this->boardCandies, &neg, j + 2, i);
+        setArray2D(this->boardCandies, &neg, j + 3, i);
       }
     }
   }
 
-  // Horizontal 3-in-a-row
+  // Vertical 3-in-a-row
   for (int i = 0; i <= this->boardCandies->rows - 2; i++) {
     for (int j = 0; j <= this->boardCandies->columns; j++) {
-      int curr = *((int*)getArray2D(this->boardCandies, i, j));
-      if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, i + 1, j)) && curr == *((int*)getArray2D(this->boardCandies, i + 2, j))) {
+      int curr = *((int*)getArray2D(this->boardCandies, j, i));
+      if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, j, i + 1))&& curr == *((int*)getArray2D(this->boardCandies, j, i + 2))) {
         result = 1;
-        setArray2D(this->boardCandies, &neg, i, j);
-        setArray2D(this->boardCandies, &neg, i + 1, j);
-        setArray2D(this->boardCandies, &neg, i + 2, j);
+        setArray2D(this->boardCandies, &neg, j, i);
+        setArray2D(this->boardCandies, &neg, j, i + 1);
+        setArray2D(this->boardCandies, &neg, j, i + 2);
       }
     }
   }
+ 
+  // Horizontal 3-in-a-row
+  for (int i = 0; i <= this->boardCandies->rows; i++) {
+    for (int j = 0; j <= this->boardCandies->columns - 2; j++) {
+      int curr = *((int*)getArray2D(this->boardCandies, j, i));
+      if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, j + 1, i)) && curr == *((int*)getArray2D(this->boardCandies, j + 2, i))) {
+        result = 1;
+        setArray2D(this->boardCandies, &neg, j, i);
+        setArray2D(this->boardCandies, &neg, j + 1, i);
+        setArray2D(this->boardCandies, &neg, j + 2, i);
+      }
+    }
+  }
+
   return result;
 }
 };
