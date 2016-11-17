@@ -22,7 +22,7 @@ void prepareView(int gridSquareDimension){
   for (int i = 0; i <= md->arr->rows; i++) {
     for (int j = 0; j <= md->arr->columns; j++) {
       int* x = (int*) getArray2D(md->arr, j, i);
-      char* disp = (char*) malloc(sizeof(char) * 2);
+      char* disp = (char*) malloc(sizeof(char) * 3); //3 fairly arbitrary
       if (*((int*)getArray2D(md->state, j, i)) == 0){
 	sprintf(disp, "%d*", *x);
       } else {

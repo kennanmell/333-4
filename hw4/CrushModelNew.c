@@ -13,15 +13,17 @@ class CrushModel {
   int colors; //max # of distinct colors in extension board
 
   Array2D boardCandies; //current candies on the board
+  Array2D boardCandyTypes; //the type of each candy
   Array2D boardState; //how many times each square must fire
+  Array2D boardType; //the type of each candy
   int movesMade; //how many moves have been made
   int currentScore; //total amount that state has decreased
   int* extensionOffset;
 
 CrushModel(int gameid, Array2D extensionColor,
 		       Array2D boardInitialState, int movesAllowed,
-		       int colors, Array2D boardCandies, Array2D boardState,
-		       int movesMade, int currentScore, 
+	               int colors, Array2D boardCandies, Array2D boardCandyTypes,
+	               Array2D boardState, int movesMade, int currentScore, 
 		       int extensionOffset[]){
 
   this->gameid = gameid;
@@ -30,6 +32,7 @@ CrushModel(int gameid, Array2D extensionColor,
   this->movesAllowed = movesAllowed;
   this->colors = colors;
   this->boardCandies = boardCandies;
+  this->boardCandyTypes = boardCandyTypes;
   this->boardState = boardState;
   this->movesMade = movesMade;
   this->currentScore = currentScore;
@@ -183,36 +186,40 @@ Array2D deserializeInt2DArrayFromJsonObject(json_t* json) {
    return array;
 }
 
-Array2D deserializeBoardCandiesFromJsonObject(json_t* json) {
+int deserializeBoardCandiesFromJsonObject(json_t* json, Array2D* colors, Array2D* types) {
    json_t* jRows = json_object_get(json, "rows");
 
    if (!json_is_integer(jRows)) {
-      return nullptr;
+     return 1;
    }
    int rows = json_integer_value(jRows);
 
    json_t* jColumns = json_object_get(json, "columns");
    if (!json_is_integer(jColumns)) {
-      return nullptr;
+     return 1;
    }
    int columns = json_integer_value(jColumns);
 
-   Array2D array = allocateArray2D(rows, columns);   
+   *colors = allocateArray2D(rows, columns);
+   *types = allocateArray2D(rows, columns);
 
    json_t* jData = json_object_get(json, "data");
    if (!json_is_array(jData)) {
-      return nullptr;
+     return 1;
    }
    int arraySize = json_array_size(jData);
    int* arr = (int*) malloc(sizeof(int) * arraySize);
+   int* arr2 = (int*) malloc(sizeof(int) * arraySize);
 
    for (int i = 0; i < arraySize; i++) {
      arr[i] = json_integer_value(json_object_get(json_array_get(jData, i), "color"));
-      setArray2D(array, &arr[i], i % columns, i / columns);
+     arr2[i] = json_integer_value(json_object_get(json_array_get(jData, i), "type"));
+     setArray2D(*colors, &arr[i], i % columns, i / columns);
+     setArray2D(*types, &arr2[i], i % columns, i / columns);
    }
    
    json_decref(json);
-   return array;
+   return 0;
 }
 
 
@@ -254,16 +261,18 @@ CrushModel* deserializeGameInstance(char* location){
 
   //game state
   json_t* gameState = json_object_get(json, "gamestate");
-  Array2D boardCandies, boardState;
+  Array2D boardCandies, boardState, boardCandyTypes;
   int movesMade, currentScore, *extensionOffset;
   if (gameState != nullptr){
     printf("Not null!\n");
     
-    //boardCandies
+    //boardCandies and candy types
     json_t* jBoardCandies = json_object_get(gameState, "boardcandies");
-    boardCandies = deserializeBoardCandiesFromJsonObject(jBoardCandies);
+    deserializeBoardCandiesFromJsonObject(jBoardCandies, &boardCandies, &boardCandyTypes);
     printf("board candies:\n");
     printArray(boardCandies);
+    printf("board types:\n");
+    printArray(boardCandyTypes);
 
     //board state
     json_t* jBoardState = json_object_get(gameState, "boardstate");
@@ -296,18 +305,23 @@ CrushModel* deserializeGameInstance(char* location){
   } else {
     printf("null!\n");
 
-    //board Candies
+    //board Candies and candy types
     int boardCandiesRows = boardInitialState->rows + 1;
     int boardCandiesColumns = boardInitialState->columns + 1;
     boardCandies = allocateArray2D(boardCandiesColumns, boardCandiesRows);
+    boardCandyTypes = allocateArray2D(boardCandiesColumns, boardCandiesRows);
+    int* zero = (int*) malloc(sizeof(int*));
+    *zero = 0; //will cause multiple frees?
     for (int i = 0; i < boardCandiesRows; i++){
       for (int j = 0; j < boardCandiesColumns; j++){
 	setArray2D(boardCandies, getArray2D(extensionColor, j, i), j, i);
+	setArray2D(boardCandyTypes, zero, j, i);
       } 
     }
     printf("board candies:\n");
     printArray(boardCandies);
-  
+    printf("board candy types:\n");
+    printArray(boardCandyTypes);
 
     //board state
     boardState = allocateArray2D(boardCandiesColumns, boardCandiesRows);
@@ -338,7 +352,7 @@ CrushModel* deserializeGameInstance(char* location){
     }
     printf("\n");
   }
-  CrushModel* result = new CrushModel(gameid, extensionColor, boardInitialState, movesAllowed, colors, boardCandies, boardState, movesMade, currentScore, extensionOffset);
+  CrushModel* result = new CrushModel(gameid, extensionColor, boardInitialState, movesAllowed, colors, boardCandies, boardCandyTypes,  boardState, movesMade, currentScore, extensionOffset);
   return result;
 }
 
@@ -358,15 +372,16 @@ json_t* serializeArray2DToJsonObject(Array2D array){
   return out;
 }
 
-json_t* serializeBoardCandiesToJsonObject(Array2D array){
+json_t* serializeBoardCandiesToJsonObject(Array2D array, Array2D array2){
   json_t* out = json_object();
   json_t* jArr = json_array();
   for (int i = 0; i <= array->rows; i++) {
      for (int j = 0; j <= array->columns; j++) {
-        int* curr = (int*) getArray2D(array,j, i);
+        int* curr = (int*) getArray2D(array, j, i);
+	int* curr2 = (int*) getArray2D(array2, j, i);
 	json_t* index = json_object();
 	json_object_set_new(index, "color", json_integer(*curr));
-	json_object_set_new(index, "type", json_integer(0));
+	json_object_set_new(index, "type", json_integer(*curr2));
         json_array_append_new(jArr, index);
      }
   }
@@ -394,7 +409,7 @@ void serializeGameInstance(char* location){
 
   //gameState
   json_t* jGameState = json_object();
-  json_t* jBoardCandies = serializeBoardCandiesToJsonObject(model->boardCandies);
+  json_t* jBoardCandies = serializeBoardCandiesToJsonObject(model->boardCandies, model->boardCandyTypes);
   json_object_set_new(jGameState, "boardcandies", jBoardCandies);
   json_t* jBoardState = serializeArray2DToJsonObject(model->boardState);
   json_object_set_new(jGameState, "boardstate", jBoardState);
@@ -406,7 +421,7 @@ void serializeGameInstance(char* location){
   }
   json_object_set_new(jGameState, "extensionoffset", jExtensionOffset);
   json_object_set_new(out, "gamestate", jGameState);
-  int result = json_dump_file(out, location, 0);
+  json_dump_file(out, location, 0);
   json_decref(out);
 }
 
