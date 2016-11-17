@@ -1,4 +1,4 @@
-SRC=CrushModelNew.c Array2D.c CrushModel.c CrushView.c  # change these to your source file names
+SRC=CrushMain.cpp Array2D.c CrushModel.c CrushView.c  # change these to your source file names
 HEADERS=CrushView.h Array2D.h CrushModel.h  # c 
 CFLAGS = -Wall -Wpedantic -std=c++11
 IFLAGS =  -I../hw2 -I../jansson/include
@@ -12,4 +12,4 @@ hw4: $(SRC) $(HEADERS) $(LIBS)
 	g++ $(CFLAGS) -g -O0 $(IFLAGS) $(GTKCFLAGS) -o hw4 $(SRC) $(LDFLAGS) $(GTKLDFLAGS)
 
 clean:
-	rm -f *.o *~ hw3
+	rm -f *.o *~ hw4

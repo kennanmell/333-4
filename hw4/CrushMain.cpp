@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "CrushView.h"
 
-class CrushModel {
+class CrushMain {
   public:
   int neg = -1; // used to represent a template that needs to be fired
   int gameid; //unique identifier
@@ -20,7 +20,7 @@ class CrushModel {
   int currentScore; //total amount that state has decreased
   int* extensionOffset;
 
-CrushModel(int gameid, Array2D extensionColor,
+CrushMain(int gameid, Array2D extensionColor,
 		       Array2D boardInitialState, int movesAllowed,
 	               int colors, Array2D boardCandies, Array2D boardCandyTypes,
 	               Array2D boardState, int movesMade, int currentScore, 
@@ -75,7 +75,7 @@ void fireTemplates() {
           swapArray2D(this->boardCandies, j, k, j, k + 1);
         }
 
-        setArray2D(this->boardCandies, getArray2D(extensionColor, j, (extensionOffset[j] - 1) % (extensionColor->rows + 1)), j, k);
+        setArray2D(this->boardCandies, getArray2D(extensionColor, j, extensionOffset[j] % (extensionColor->rows + 1)), j, k);
 
         // Update score.
         int* remaining = (int*) getArray2D(this->boardState, j, i);
@@ -152,7 +152,7 @@ int findTemplates() {
 }
 };
 
-CrushModel *m;
+CrushMain *m;
 
 Array2D deserializeInt2DArrayFromJsonObject(json_t* json) {
    json_t* jRows = json_object_get(json, "rows");
@@ -223,7 +223,7 @@ int deserializeBoardCandiesFromJsonObject(json_t* json, Array2D* colors, Array2D
 }
 
 
-CrushModel* deserializeGameInstance(char* location){
+CrushMain* deserializeGameInstance(char* location){
   json_error_t error;
   json_t* json = json_load_file(location, 0, &error);
   if (!json){
@@ -344,7 +344,7 @@ CrushModel* deserializeGameInstance(char* location){
     //extension offset
     extensionOffset = (int*) malloc(sizeof(int) * boardCandiesColumns);
     for (int i = 0; i < boardCandiesColumns; i++){
-      extensionOffset[i] = boardCandiesColumns + 1;
+      extensionOffset[i] = boardCandiesRows;
     }
     printf("extension offset:\n");
     for (int i = 0; i < boardCandiesColumns; i++){
@@ -352,7 +352,7 @@ CrushModel* deserializeGameInstance(char* location){
     }
     printf("\n");
   }
-  CrushModel* result = new CrushModel(gameid, extensionColor, boardInitialState, movesAllowed, colors, boardCandies, boardCandyTypes,  boardState, movesMade, currentScore, extensionOffset);
+  CrushMain* result = new CrushMain(gameid, extensionColor, boardInitialState, movesAllowed, colors, boardCandies, boardCandyTypes,  boardState, movesMade, currentScore, extensionOffset);
   return result;
 }
 
@@ -393,7 +393,7 @@ json_t* serializeBoardCandiesToJsonObject(Array2D array, Array2D array2){
 }
 
 void serializeGameInstance(char* location){
-  CrushModel* model = m;
+  CrushMain* model = m;
   json_t* out = json_object();
 
   //gameDef
@@ -425,6 +425,7 @@ void serializeGameInstance(char* location){
   json_decref(out);
 }
 
+// Used to call the global model's updateWithMove function, allowing for compatibility with C.
 void instanceCaller(int x1, int y1, int x2, int y2) {
   m->updateWithMove(x1, y1, x2, y2);
 }
@@ -441,5 +442,6 @@ int main(int argc, char** argv){
   }
   int result = runner(m->boardCandies, m->boardState, &(m->movesMade), &(m->currentScore), &instanceCaller,
 		      &serializeGameInstance, argc, argv);
+  free(m);
   return result;
 }
