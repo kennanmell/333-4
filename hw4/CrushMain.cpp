@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include "CrushView.h"
 
+  int zero = 0; // used to represent the default candy type
+
 class CrushMain {
   public:
   int neg = -1; // used to represent a template that needs to be fired
@@ -37,6 +39,16 @@ CrushMain(int gameid, Array2D extensionColor,
   this->movesMade = movesMade;
   this->currentScore = currentScore;
   this->extensionOffset = extensionOffset;
+}
+
+~CrushMain() {
+  freeArray2D(extensionColor, NULL);
+  freeArray2D(boardInitialState, NULL);
+  freeArray2D(boardCandies, NULL);
+  freeArray2D(boardCandyTypes, NULL);
+  freeArray2D(boardState, NULL);
+  free(extensionOffset);
+  //freeArray2D(boardType, NULL);
 }
 
 // Repeats the process of finding and firing templates until no templates are found. Updates moves remaining, etc. accordingly. Returns the number of templates found.
@@ -153,6 +165,7 @@ int findTemplates() {
 };
 
 CrushMain *m;
+int* arr;
 
 Array2D deserializeInt2DArrayFromJsonObject(json_t* json) {
    json_t* jRows = json_object_get(json, "rows");
@@ -175,14 +188,13 @@ Array2D deserializeInt2DArrayFromJsonObject(json_t* json) {
       return NULL;
    }
    int arraySize = json_array_size(jData);
-   int* arr = (int*) malloc(sizeof(int) * arraySize);
+   arr = (int*) malloc(sizeof(int) * arraySize);
 
    for (int i = 0; i < arraySize; i++) {
       arr[i] = json_integer_value(json_array_get(jData, i));
       setArray2D(array, &arr[i], i % columns, i / columns);
    }
    
-   json_decref(json);
    return array;
 }
 
@@ -218,7 +230,6 @@ int deserializeBoardCandiesFromJsonObject(json_t* json, Array2D* colors, Array2D
      setArray2D(*types, &arr2[i], i % columns, i / columns);
    }
    
-   json_decref(json);
    return 0;
 }
 
@@ -310,12 +321,10 @@ CrushMain* deserializeGameInstance(char* location){
     int boardCandiesColumns = boardInitialState->columns + 1;
     boardCandies = allocateArray2D(boardCandiesRows, boardCandiesColumns);
     boardCandyTypes = allocateArray2D(boardCandiesRows, boardCandiesColumns);
-    int* zero = (int*) malloc(sizeof(int*));
-    *zero = 0; //will cause multiple frees?
     for (int i = 0; i < boardCandiesRows; i++){
       for (int j = 0; j < boardCandiesColumns; j++){
 	setArray2D(boardCandies, getArray2D(extensionColor, j, i), j, i);
-	setArray2D(boardCandyTypes, zero, j, i);
+	setArray2D(boardCandyTypes, &zero, j, i);
       } 
     }
     printf("board candies:\n");
@@ -353,6 +362,7 @@ CrushMain* deserializeGameInstance(char* location){
     printf("\n");
   }
   CrushMain* result = new CrushMain(gameid, extensionColor, boardInitialState, movesAllowed, colors, boardCandies, boardCandyTypes,  boardState, movesMade, currentScore, extensionOffset);
+  json_decref(json);
   return result;
 }
 
@@ -423,6 +433,9 @@ void serializeGameInstance(char* location){
   json_object_set_new(out, "gamestate", jGameState);
   json_dump_file(out, location, 0);
   json_decref(out);
+  json_decref(jGameDef);
+  json_decref(jGameState);
+  json_decref(jExtensionOffset);
 }
 
 // Used to call the global model's updateWithMove function, allowing for compatibility with C.
@@ -442,6 +455,7 @@ int main(int argc, char** argv){
   }
   int result = runner(m->boardCandies, m->boardState, &(m->movesMade), &(m->currentScore), &instanceCaller,
 		      &serializeGameInstance, argc, argv);
-  free(m);
+  delete m;
+  free(arr);
   return result;
 }
