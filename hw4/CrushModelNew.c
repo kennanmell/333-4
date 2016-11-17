@@ -308,8 +308,8 @@ CrushModel* deserializeGameInstance(char* location){
     //board Candies and candy types
     int boardCandiesRows = boardInitialState->rows + 1;
     int boardCandiesColumns = boardInitialState->columns + 1;
-    boardCandies = allocateArray2D(boardCandiesColumns, boardCandiesRows);
-    boardCandyTypes = allocateArray2D(boardCandiesColumns, boardCandiesRows);
+    boardCandies = allocateArray2D(boardCandiesRows, boardCandiesColumns);
+    boardCandyTypes = allocateArray2D(boardCandiesRows, boardCandiesColumns);
     int* zero = (int*) malloc(sizeof(int*));
     *zero = 0; //will cause multiple frees?
     for (int i = 0; i < boardCandiesRows; i++){
@@ -324,7 +324,7 @@ CrushModel* deserializeGameInstance(char* location){
     printArray(boardCandyTypes);
 
     //board state
-    boardState = allocateArray2D(boardCandiesColumns, boardCandiesRows);
+    boardState = allocateArray2D(boardCandiesRows, boardCandiesColumns);
     for (int i = 0; i < boardCandiesRows; i++) {
       for (int j = 0; j < boardCandiesColumns; j++) {
         setArray2D(boardState, getArray2D(boardInitialState, j, i), j, i);
@@ -344,7 +344,7 @@ CrushModel* deserializeGameInstance(char* location){
     //extension offset
     extensionOffset = (int*) malloc(sizeof(int) * boardCandiesColumns);
     for (int i = 0; i < boardCandiesColumns; i++){
-      extensionOffset[i] = boardCandiesColumns + 1;
+      extensionOffset[i] = boardCandiesRows + 1;
     }
     printf("extension offset:\n");
     for (int i = 0; i < boardCandiesColumns; i++){
