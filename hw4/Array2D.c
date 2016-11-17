@@ -147,10 +147,17 @@ void freeArray2D(Array2D array, Array2DPayloadFreeFnPtr payload_free_function) {
         return;
     }
     
-    
-    for (Array2DIndexPtr x = array->head; payload_free_function != NULL && (long*) x < (long*) array->head + array->rows * array->columns; x = (long*) x + 1) {
-        payload_free_function(x);
+    int size = array->columns * array->rows;
+    long* x = (long*) array->head;
+    long* end = &x[size];
+    for (; payload_free_function != NULL && x <= end; x++) {
+      payload_free_function((void*)*x);
     }
+    /*
+    for (Array2DIndexPtr x = array->head; payload_free_function != NULL && (long*) x < (long*) array->head + array->rows * array->columns; x = (long*) x + 1) {
+      payload_free_function((void*)(*((long*)x)));
+    }
+    */
 
     /*
     for (Array2DIndexPtr x = array->head; payload_free_function != NULL && x < array->head + array->rows * array->columns * PtrSize; x += PtrSize) {

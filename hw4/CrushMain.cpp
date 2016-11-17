@@ -5,6 +5,7 @@
 
   int zero = 0; // used to represent the default candy type
 
+//The class used to store data about a game
 class CrushMain {
   public:
   int neg = -1; // used to represent a template that needs to be fired
@@ -167,6 +168,9 @@ int findTemplates() {
 CrushMain *m;
 int* arr;
 
+//Given a json object which contains int fields "rows" and "columns",
+//and an array field of ints "data", creates an Array2D representing that
+//object and returns it
 Array2D deserializeInt2DArrayFromJsonObject(json_t* json) {
    json_t* jRows = json_object_get(json, "rows");
 
@@ -191,13 +195,16 @@ Array2D deserializeInt2DArrayFromJsonObject(json_t* json) {
    arr = (int*) malloc(sizeof(int) * arraySize);
 
    for (int i = 0; i < arraySize; i++) {
-      arr[i] = json_integer_value(json_array_get(jData, i));
+     arr[i] = json_integer_value(json_array_get(jData, i));
       setArray2D(array, &arr[i], i % columns, i / columns);
    }
-   
    return array;
 }
 
+//Given a json object containing int fields "rows" and "columns", and an array field
+//"data" containing json objects which store ints "color" and "type", creates two
+//Array2Ds containing the color information and the type information. These two
+//arrays are given as out parameters.
 int deserializeBoardCandiesFromJsonObject(json_t* json, Array2D* colors, Array2D* types) {
    json_t* jRows = json_object_get(json, "rows");
 
@@ -233,7 +240,9 @@ int deserializeBoardCandiesFromJsonObject(json_t* json, Array2D* colors, Array2D
    return 0;
 }
 
-
+//Given a file name to deserialize from, deserializes the given file
+//and creates a CrushMain object to represent that game instance.
+//pre: The file must be of the correct format
 CrushMain* deserializeGameInstance(char* location){
   json_error_t error;
   json_t* json = json_load_file(location, 0, &error);
@@ -366,6 +375,9 @@ CrushMain* deserializeGameInstance(char* location){
   return result;
 }
 
+//Given a Array2D of ints, creates and returns a json object representing that Array2D.
+//The json object will have a "rows" field, a "columns" field, and a "data" array
+//which will have the data of the Array2D.
 json_t* serializeArray2DToJsonObject(Array2D array){
   json_t* out = json_object();
   json_t* jArr = json_array();
@@ -382,6 +394,10 @@ json_t* serializeArray2DToJsonObject(Array2D array){
   return out;
 }
 
+//Serializes two arrays representing board candy colors and board candy types
+//into a single json object. The json object will have int field "rows", "columns",
+//and an array called "data" which contains json objects which have the int fields
+//"color" and "type". Returns this as a pointer
 json_t* serializeBoardCandiesToJsonObject(Array2D array, Array2D array2){
   json_t* out = json_object();
   json_t* jArr = json_array();
@@ -402,6 +418,7 @@ json_t* serializeBoardCandiesToJsonObject(Array2D array, Array2D array2){
   return out;
 }
 
+//Given a location to write out to, serializes the current game instance.
 void serializeGameInstance(char* location){
   CrushMain* model = m;
   json_t* out = json_object();
