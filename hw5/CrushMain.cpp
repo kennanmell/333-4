@@ -460,18 +460,14 @@ void instanceCaller(int x1, int y1, int x2, int y2) {
   m->updateWithMove(x1, y1, x2, y2);
 }
 
-int main(int argc, char** argv){
-  if (argc != 2){
-    printf("provide a single json file to take in\n");
-    return 1;
-  }
-  m = deserializeGameInstance(argv[1]);
+int playWithSerializedBoard(char* argv){
+  m = deserializeGameInstance(argv);
   int found = m->updateWithMove(0, 0, 0, 0); // Make sure the initial game state is settled.
   if (found) {
     m->movesMade -= 1;
   }
   int result = runner(m->boardCandies, m->boardState, &(m->movesMade), &(m->currentScore), &instanceCaller,
-		      &serializeGameInstance, argc, argv);
+		      &serializeGameInstance, 1, &argv);
   delete m;
   free(arr);
   return result;
