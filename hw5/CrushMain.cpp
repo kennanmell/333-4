@@ -419,7 +419,7 @@ json_t* serializeBoardCandiesToJsonObject(Array2D array, Array2D array2){
 }
 
 //Given a location to write out to, serializes the current game instance.
-void serializeGameInstance(char* location){
+const char* serializeGameInstance(char* location){
   CrushMain* model = m;
   json_t* out = json_object();
 
@@ -448,11 +448,28 @@ void serializeGameInstance(char* location){
   }
   json_object_set_new(jGameState, "extensionoffset", jExtensionOffset);
   json_object_set_new(out, "gamestate", jGameState);
-  json_dump_file(out, location, 0);
+  if (location != NULL) {
+    json_dump_file(out, location, 0);
+  }
+
+  json_t* returned = json_object();
+  json_object_set_new(returned, "action", json_string("helloack"));
+  json_object_set_new(returned, "gameinstance", out);
+  char* result = json_dumps(out, 0);
   json_decref(out);
   json_decref(jGameDef);
   json_decref(jGameState);
   json_decref(jExtensionOffset);
+  json_decref(returned);
+  return result;
+}
+
+const char* serializeJsonForModel(char* location) {
+  CrushMain* i = deserializeGameInstance(location);
+  m = i;
+  const char* result = serializeGameInstance(NULL);
+  delete i;
+  return result;
 }
 
 // Used to call the global model's updateWithMove function, allowing for compatibility with C.
@@ -460,14 +477,14 @@ void instanceCaller(int x1, int y1, int x2, int y2) {
   m->updateWithMove(x1, y1, x2, y2);
 }
 
-int playWithSerializedBoard(char* argv){
-  m = deserializeGameInstance(argv);
+int playWithSerializedBoard(int argc, char** argv){
+  m = deserializeGameInstance(argv[1]);
   int found = m->updateWithMove(0, 0, 0, 0); // Make sure the initial game state is settled.
   if (found) {
     m->movesMade -= 1;
   }
   int result = runner(m->boardCandies, m->boardState, &(m->movesMade), &(m->currentScore), &instanceCaller,
-		      &serializeGameInstance, 1, &argv);
+		      &serializeGameInstance, argc, argv);
   delete m;
   free(arr);
   return result;

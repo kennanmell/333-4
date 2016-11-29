@@ -12,7 +12,7 @@ GtkWidget* window;
 int* movesPtr;
 int* scorePtr;
 void (*swapHelper)(int, int, int, int);
-void (*serializeHelper)(char*);
+const char* (*serializeHelper)(char*);
 
 // Prepares (draws) the view.
 void prepareView(int gridSquareDimension){
@@ -132,7 +132,7 @@ void g_application_open(GApplication *application, GFile **files, gint n_files,
 }
 
 int runner (Array2D arr, Array2D state, int* moves, int* score, void (*instanceCaller)(int, int, int, int), 
-	    void (*serializer)(char*), int argc, char** argv) {
+	    const char* (*serializer)(char*), int argc, char** argv) {
   GtkApplication *app;
   int status;
   
