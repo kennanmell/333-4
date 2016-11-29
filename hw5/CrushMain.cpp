@@ -2,6 +2,9 @@
 #include "Array2D.h"
 #include <stdlib.h>
 #include "CrushView.h"
+#include <iostream>
+
+using namespace std;
 
   int zero = 0; // used to represent the default candy type
 
@@ -460,11 +463,32 @@ void instanceCaller(int x1, int y1, int x2, int y2) {
   m->updateWithMove(x1, y1, x2, y2);
 }
 
+using namespace std;
+
 int main(int argc, char** argv){
-  if (argc != 2){
-    printf("provide a single json file to take in\n");
+  if (argc != 3){
+    printf("Usage: ./CrushMain.cpp host port");
     return 1;
   }
+  int serverPort;
+  try {
+    serverPort = stoi(argv[2]);
+  } catch (...){
+  }
+
+  try {
+    string serverName = (string) stoi(argv[1]);
+    hw5_net::ClientSocket clientSocket(serverName, serverPort);
+    string helloMessage = "hello";
+    clientSocket.WrappedWrite(helloMessage, helloMessage.length());
+  } catch(string errString) {
+    cout << errString << endl;
+    return 1;
+  }
+  printf("exiting\n");
+  return 0;
+
+    /*
   m = deserializeGameInstance(argv[1]);
   int found = m->updateWithMove(0, 0, 0, 0); // Make sure the initial game state is settled.
   if (found) {
@@ -475,4 +499,5 @@ int main(int argc, char** argv){
   delete m;
   free(arr);
   return result;
+    */
 }
