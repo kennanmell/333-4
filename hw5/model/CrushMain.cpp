@@ -1,11 +1,12 @@
 #include <jansson.h>
-#include "Array2D.h"
+#include "../shared/Array2D.h"
 #include <stdlib.h>
-#include "CrushView.h"
+#include "../view/CrushView.h"
 #include <iostream>
 
-#include "ClientSocket.h"
-#include "ServerSocket.h"
+#include "../shared/ClientSocket.h"
+#include "../shared/ServerSocket.h"
+#include "../view/CrushView.h"
 
 using namespace std;
 
@@ -466,38 +467,13 @@ void instanceCaller(int x1, int y1, int x2, int y2) {
   m->updateWithMove(x1, y1, x2, y2);
 }
 
-int main(int argc, char** argv){
-  if (argc != 3){
-    printf("Usage: ./CrushMain.cpp host port");
-    return 1;
-  }
-  int serverPort;
-  try {
-    serverPort = stoi(argv[2]);
-  } catch (...){
-  }
-
-  try {
-    string serverName(argv[1]);
-    hw5_net::ClientSocket clientSocket(serverName, serverPort);
-    string helloMessage = "hello";
-    clientSocket.WrappedWrite(helloMessage.c_str(), helloMessage.length());
-  } catch(string errString) {
-    cout << errString << endl;
-    return 1;
-  }
-  printf("exiting\n");
-  return 0;
-}
-
 int playWithSerializedBoard(char* argv){
   m = deserializeGameInstance(argv);
   int found = m->updateWithMove(0, 0, 0, 0); // Make sure the initial game state is settled.
   if (found) {
     m->movesMade -= 1;
   }
-  int result = runner(m->boardCandies, m->boardState, &(m->movesMade), &(m->currentScore), &instanceCaller,
-		      &serializeGameInstance, 1, &argv);
+  int result = runner(m->boardCandies, m->boardState, &(m->movesMade), &(m->currentScore), &instanceCaller, &serializeGameInstance, 1, &argv);
   delete m;
   free(arr);
   return result;

@@ -2,11 +2,11 @@
 #include <string>
 #include <cstdlib>
 
-using namespace std;
+using namespace std; 
 
-#include "../shared/ServerSocket.h"
-#include "../shared/ClientSocket.h"
-#include "../model/CrushMain.h"
+#include "ServerSocket.h"
+#include "ClientSocket.h"
+#include "CrushMain.h"
 
 void usage(const char *exeName) {
   cout << "Usage: " << exeName << " [port]" << endl;
@@ -80,5 +80,5 @@ int main(int argc, char *argv[]) {
   
   cout << "Closing" << endl;
   
-  return EXIT_SUCCESS;
+  return EXIT_SUCCESS; 
 }
