@@ -1,7 +1,7 @@
 #include <gtk/gtk.h>
-#include "Array2D.h"
+#include "../shared/Array2D.h"
 #include <stdlib.h>
-#include "CrushModel.h"
+#include "../model/CrushModel.h"
 #include "CrushView.h"
 
 //char* locationOfSelected;

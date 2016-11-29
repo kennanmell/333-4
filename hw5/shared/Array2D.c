@@ -4,7 +4,7 @@
 #include <jansson.h>
 
 #define PtrSize sizeof(Array2DIndexPtr)
-
+ 
 // Prints a 2D array, including its dimensions.
 void printArray(Array2D array) {
    printf("Array is %d x %d\n", array->rows + 1, array->columns + 1);
