@@ -4,6 +4,9 @@
 #include "CrushView.h"
 #include <iostream>
 
+#include "ClientSocket.h"
+#include "ServerSocket.h"
+
 using namespace std;
 
   int zero = 0; // used to represent the default candy type
@@ -463,8 +466,6 @@ void instanceCaller(int x1, int y1, int x2, int y2) {
   m->updateWithMove(x1, y1, x2, y2);
 }
 
-using namespace std;
-
 int main(int argc, char** argv){
   if (argc != 3){
     printf("Usage: ./CrushMain.cpp host port");
@@ -477,27 +478,27 @@ int main(int argc, char** argv){
   }
 
   try {
-    string serverName = (string) stoi(argv[1]);
+    string serverName(argv[1]);
     hw5_net::ClientSocket clientSocket(serverName, serverPort);
     string helloMessage = "hello";
-    clientSocket.WrappedWrite(helloMessage, helloMessage.length());
+    clientSocket.WrappedWrite(helloMessage.c_str(), helloMessage.length());
   } catch(string errString) {
     cout << errString << endl;
     return 1;
   }
   printf("exiting\n");
   return 0;
+}
 
-    /*
-  m = deserializeGameInstance(argv[1]);
+int playWithSerializedBoard(char* argv){
+  m = deserializeGameInstance(argv);
   int found = m->updateWithMove(0, 0, 0, 0); // Make sure the initial game state is settled.
   if (found) {
     m->movesMade -= 1;
   }
   int result = runner(m->boardCandies, m->boardState, &(m->movesMade), &(m->currentScore), &instanceCaller,
-		      &serializeGameInstance, argc, argv);
+		      &serializeGameInstance, 1, &argv);
   delete m;
   free(arr);
   return result;
-    */
 }

@@ -35,9 +35,7 @@ using std::string;
 
 #include "./ServerSocket.h"
 
-extern "C" {
-  #include "CSE333.h"
-}
+#include "CSE333.h"
 
 namespace hw5_net {
 

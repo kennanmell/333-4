@@ -1,5 +1,5 @@
-SRC=CrushMain.cpp Array2D.c CrushModel.c CrushView.c  # change these to your source file names
-HEADERS=CrushView.h Array2D.h CrushModel.h  # c 
+SRC=CrushMain.cpp ClientSocket.cc Verify333.c Array2D.c CSE333Socket.cc CrushModel.c CrushView.c ViewMain.cpp ServerSocket.cc  # change these to your source file names
+HEADERS=CrushView.h Array2D.h CrushModel.h CSE333Socket.h CrushMain.h ClientSocket.h ServerSocket.h CSE333.h
 CFLAGS = -Wall -Wpedantic -std=c++11
 IFLAGS =  -I../hw2 -I../jansson/include
 GTKCFLAGS = `pkg-config --cflags gtk+-3.0`
