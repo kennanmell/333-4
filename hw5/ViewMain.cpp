@@ -9,19 +9,20 @@ using namespace std;
 #include "CrushMain.h"
 
 void usage(const char *exeName) {
-  cout << "Usage: " << exeName << " [port]" << endl;
+  cout << "Usage: " << exeName << " board-json" << " [port]" << endl;
   cout << "  Creates a server socket on port, if given," << endl
-       << "  or on random port, if not." << endl;
+       << "  or on random port, if not." << endl
+       << "  And displays the json board once the model connects." << endl;
   exit(1);
 }
 
 int main(int argc, char *argv[]) {
 
-  if ( argc != 1 && argc != 2 ) usage(argv[0]);
+  if ( argc != 2 && argc != 3 ) usage(argv[0]);
   
   int port = 0;
   try {
-    if ( argc == 2 ) port = stoi(argv[1]);
+    if ( argc == 3 ) port = stoi(argv[2]);
   } catch (...) {
     usage(argv[0]);
   }
@@ -58,7 +59,7 @@ int main(int argc, char *argv[]) {
     hw5_net::ClientSocket peerSocket(acceptedFd);
 
     // Play game
-    playWithSerializedBoard("test25by5.json");
+    playWithSerializedBoard(argc, argv);
 
     // Read and print input until EOF.
 
@@ -68,10 +69,17 @@ int main(int argc, char *argv[]) {
     int readCount;
     while ( (readCount = peerSocket.WrappedRead(buf, 1023)) ) {
       // write to stdout
+    	printf("%d\n", readCount);
       buf[readCount] = '\0'; // make sure buf holds a c style string
       cout << "Got '" << buf << "'" << endl;
       // write back to peer
-      peerSocket.WrappedWrite(buf, readCount);
+      const char* out = serializeJsonForModel(argv[1]);
+      char* out2 = (char*) malloc(sizeof(char) * 1200);
+      sprintf(out2, "{\"action\": \"helloack\", \"gameinstance\": %s}", out);
+      //const char* out = "{\"action\": \"helloack\", \"gameinstance\": \"{}\"}";
+      cout << out2 << endl;
+      peerSocket.WrappedWrite(out2, 500);
+      free(out2);
     }
   } catch (string errString) {
     cerr << errString << endl;
