@@ -1,4 +1,6 @@
 #include <gtk/gtk.h>
+#include "../shared/Array2D.h"
+
 #ifndef _CView_h
 #define _CView_h
 

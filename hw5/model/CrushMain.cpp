@@ -1,5 +1,3 @@
-#include <jansson.h>
-#include "../shared/Array2D.h"
 #include <stdlib.h>
 #include "../view/CrushView.h"
 #include <iostream>

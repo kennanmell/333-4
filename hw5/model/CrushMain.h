@@ -1,6 +1,9 @@
 #ifndef _CrushMain_h
 #define _CrushMain_h
 
+#include "../shared/Array2D.h"
+#include <jansson.h>
+
 //The class used to store data about a game
 class CrushMain {
   public:
@@ -177,8 +180,10 @@ json_t* serializeArray2DToJsonObject(Array2D array);
 
 json_t* serializeBoardCandiesToJsonObject(Array2D array, Array2D array2);
 
-void serializeGameInstance(char* location);
+const char* serializeGameInstance(char* location);
 
 void instanceCaller(int x1, int y1, int x2, int y2);
+
+int playWithSerializedBoard(int argc, char** argv);
 
 #endif /* _CrushMain_h */
