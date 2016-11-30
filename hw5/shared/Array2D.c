@@ -147,10 +147,10 @@ void freeArray2D(Array2D array, Array2DPayloadFreeFnPtr payload_free_function) {
         return;
     }
     
-    int size = array->columns * array->rows;
+    int size = (array->columns+1) * (array->rows+1);
     long* x = (long*) array->head;
     long* end = &x[size];
-    for (; payload_free_function != NULL && x <= end; x++) {
+    for (; payload_free_function != NULL && x < end; x++) {
       payload_free_function((void*)*x);
     }
     /*
