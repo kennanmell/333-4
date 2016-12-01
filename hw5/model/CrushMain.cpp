@@ -47,7 +47,7 @@ Array2D deserializeInt2DArrayFromJsonObject(json_t* json) {
      // setArray2D(array, &arr[i], i % columns, i / columns);
      int* element = (int*) malloc(sizeof(int));
      *element = json_integer_value(json_array_get(jData, i));
-     setArray2D(array, &element, i % columns, i / columns);
+     setArray2D(array, element, i % columns, i / columns);
    }
    return array;
 }
