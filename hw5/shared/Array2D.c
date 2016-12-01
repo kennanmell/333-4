@@ -120,6 +120,20 @@ int setArray2D(Array2D array, Array2DPayload_t value, int x, int y) {
     return 0;
 }
 
+int setAllArray2D(Array2D oldArray, Array2D newArray) {
+  if (oldArray == NULL || newArray == NULL || oldArray->rows != newArray->rows || oldArray->columns != newArray->columns) {
+    return 1;
+  }
+
+  for (int i = 0; i <= oldArray->rows; i++) {
+    for (int j = 0; j <= oldArray->columns; j++) {
+      setArray2D(oldArray, getArray2D(newArray, j, i), j, i);
+    }
+  }
+  
+  return 0;
+}
+
 Array2D allocateArray2D(int x, int y) {
     if (x < 1 || y < 1) {
         return (Array2D) NULL;

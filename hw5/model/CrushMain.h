@@ -42,11 +42,11 @@ CrushMain(int gameid, Array2D extensionColor,
 }
 
 ~CrushMain() {
-  freeArray2D(extensionColor, NULL);
-  freeArray2D(boardInitialState, NULL);
-  freeArray2D(boardCandies, NULL);
-  freeArray2D(boardCandyTypes, NULL);
-  freeArray2D(boardState, NULL);
+  freeArray2D(extensionColor, &free);
+  freeArray2D(boardInitialState, &free);
+  freeArray2D(boardCandies, &free);
+  freeArray2D(boardCandyTypes, &free);
+  freeArray2D(boardState, &free);
   free(extensionOffset);
   //freeArray2D(boardType, NULL);
 }
@@ -164,7 +164,7 @@ int findTemplates() {
 }
 };
 
-int playWithSerializedBoard(char* argv);
+int playWithSerializedBoard(int argc, char** argv, json_t* stateJson, json_t* (*newStateMaker)(int, int, int, int));
 
 Array2D deserializeInt2DArrayFromJsonObject(json_t* json);
 
@@ -183,7 +183,5 @@ json_t* serializeBoardCandiesToJsonObject(Array2D array, Array2D array2);
 const char* serializeGameInstance(char* location);
 
 void instanceCaller(int x1, int y1, int x2, int y2);
-
-int playWithSerializedBoard(int argc, char** argv);
 
 #endif /* _CrushMain_h */

@@ -10,6 +10,7 @@ using namespace std;
 #include "../model/CrushMain.h"
 
 const int BUFSIZE = 1024;
+hw5_net::ClientSocket* peerSocket;
 
 void usage(const char *exeName) {
   cout << "Usage: " << exeName << " json-file" << " [port]" << endl;
@@ -19,7 +20,9 @@ void usage(const char *exeName) {
   exit(1);
 }
 
-int getModelResponse(hw5_net::ClientSocket peerSocket, json_t** responseJson) {
+// Get a JSON response from the model, going through the internet.
+// Returns 0 if successful, 1 otherwise. responseJson is undefined if 1 is returned.
+int getModelResponse(hw5_net::ClientSocket* peerSocket, json_t** responseJson) {
     // Read and print input until EOF.
 
     cout << "Reading" << endl;
@@ -31,7 +34,7 @@ int getModelResponse(hw5_net::ClientSocket peerSocket, json_t** responseJson) {
     do {
       printf("in do-loop");
       char buf[BUFSIZE];
-      int readCount = peerSocket.WrappedRead(buf, BUFSIZE - 1);
+      int readCount = peerSocket->WrappedRead(buf, BUFSIZE - 1);
 
       //if allocated space isn't big enough, reallocate
       if (size + readCount > stringJsonAllocatedSize){
@@ -58,6 +61,8 @@ int getModelResponse(hw5_net::ClientSocket peerSocket, json_t** responseJson) {
     json_error_t error;
     json_t* resJson = json_loads(stringJson, 0, &error);
 
+    //free(stringJson);
+
     if (!resJson) {
       printf("Response is not json value.");
       return 1;
@@ -65,10 +70,54 @@ int getModelResponse(hw5_net::ClientSocket peerSocket, json_t** responseJson) {
       *responseJson = resJson;
       return 0;
     }
+
+}
+
+json_t* newStateMaker(int x1, int y1, int x2, int y2) {
+   // Send update message.
+   json_t* sendJson = json_object();
+   json_object_set(sendJson, "action", json_string("move"));
+   json_object_set(sendJson, "row", json_integer(y1));
+   json_object_set(sendJson, "column", json_integer(x1));
+   if (x1 == x2 + 1) {
+     json_object_set(sendJson, "direction", json_integer(0));
+   } else if (x1 == x2 - 1) {
+     json_object_set(sendJson, "direction", json_integer(1));
+   } else if (y1 == y2 - 1) {
+     json_object_set(sendJson, "direction", json_integer(2));
+   } else { // y1 == y2 + 1
+     json_object_set(sendJson, "direction", json_integer(3));
+   }
+
+   char* moveChars = json_dumps(sendJson, 0);
+   string moveMessage = string(moveChars);
+
+   cout << moveMessage << endl;
+
+   peerSocket->WrappedWrite(moveMessage.c_str(), moveMessage.length());
+   json_decref(sendJson);
+   free(moveChars);
+
+   // Wait for move message.
+   json_t* resJson;
+
+   if (getModelResponse(peerSocket, &resJson)) {
+     printf("failed to get json");
+     return NULL;
+   }
+
+   json_t* updateJson = json_object_get(resJson, "action");
+   if (!json_is_string(updateJson) || strcmp("update", json_string_value(updateJson))) {
+     printf("Expected update message, didn't get it.");
+     return NULL;
+   }
+   
+   return json_object_get(resJson, "gameinstance");
 }
 
 int main(int argc, char *argv[]) {
 
+  // Make sure arguments are correct.
   if ( argc != 2 && argc != 3 ) usage(argv[0]);
   
   int port = 0;
@@ -107,7 +156,8 @@ int main(int argc, char *argv[]) {
 	 << "\tserverDNSName\t" << serverDNSName << endl;
 
     // wrap connection to peer with a CientSocket
-    hw5_net::ClientSocket peerSocket(acceptedFd);
+    peerSocket = new hw5_net::ClientSocket(acceptedFd);
+
 
     // Look for hello response.
     json_t* resJson;
@@ -117,12 +167,16 @@ int main(int argc, char *argv[]) {
       return 1;
     }
 
+
     json_t* helloJson = json_object_get(resJson, "action");
     if (!json_is_string(helloJson) || strcmp("hello", json_string_value(helloJson))) {
       printf("Expected hello message, didn't get it.");
       return 1;
     }
 
+    json_decref(resJson);
+
+    // Send helloack message.
     json_t* helloackJson = json_object();
     json_error_t error;
     json_t* gameInstanceJson = json_load_file(argv[1], 0, &error);
@@ -136,14 +190,33 @@ int main(int argc, char *argv[]) {
 
     cout << helloackMessage << endl;
 
-    peerSocket.WrappedWrite(helloackMessage.c_str(), helloackMessage.length());
+    peerSocket->WrappedWrite(helloackMessage.c_str(), helloackMessage.length());
+
+    json_decref(helloackJson);
+
+    // Look for update message.
+
+    if (getModelResponse(peerSocket, &resJson)) {
+      printf("failed to get json");
+      return 1;
+    }
+
+
+    json_t* updateJson = json_object_get(resJson, "action");
+    if (!json_is_string(updateJson) || strcmp("update", json_string_value(updateJson))) {
+      printf("Expected update message, didn't get it.");
+      return 1;
+    }
+    printf("through update call");
 
     // Display game
-    playWithSerializedBoard(argc, argv);
+    playWithSerializedBoard(argc, argv, json_object_get(resJson, "gameinstance"), &newStateMaker);
+
   } catch(string errString) {
     cout << errString << endl;
     return 1;
   }
+
   printf("exiting\n");
   return 0;
   
