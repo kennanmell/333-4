@@ -9,9 +9,12 @@ using namespace std;
 #include "../shared/ClientSocket.h"
 #include "../model/CrushMain.h"
 
+// An arbitrarily defined initial buffer size for reading buffers.
 const int BUFSIZE = 1024;
+// The socket used to read and write to the model across the internet.
 hw5_net::ClientSocket* peerSocket;
 
+// Yells at the client to enter the correct command line arguements.
 void usage(const char *exeName) {
   cout << "Usage: " << exeName << " json-file" << " [port]" << endl;
   cout << "  Creates a server socket on port, if given," << endl
@@ -20,7 +23,8 @@ void usage(const char *exeName) {
   exit(1);
 }
 
-// Get a JSON response from the model, going through the internet.
+// Get a JSON response from the model, going through the internet using peerSocket.
+// Sets responseJson to represent the model's JSON response.
 // Returns 0 if successful, 1 otherwise. responseJson is undefined if 1 is returned.
 int getModelResponse(hw5_net::ClientSocket* peerSocket, json_t** responseJson) {
     // Read and print input until EOF.
@@ -73,6 +77,9 @@ int getModelResponse(hw5_net::ClientSocket* peerSocket, json_t** responseJson) {
 
 }
 
+// Uses the internet to ask the model for a new state by passing a move action request and returning the response as a json_t.
+// (x1, y1) is the tile the player tried to move.
+// (x2, y2) is the tile the player tried to swap it with.
 json_t* newStateMaker(int x1, int y1, int x2, int y2) {
    // Send update message.
    json_t* sendJson = json_object();
@@ -133,6 +140,7 @@ json_t* newStateMaker(int x1, int y1, int x2, int y2) {
    return result;
 }
 
+// Main method plays the candy crush game. Pass the initial game state json as the first argument and optionally specify a port number as the second argument.
 int main(int argc, char *argv[]) {
 
   // Make sure arguments are correct.
@@ -239,8 +247,21 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  printf("exiting\n");
-  return 0;
+  // Send goodbye message.
+  json_t* byeJson = json_object();
+  json_t* byeStringJson = json_string("bye");
+  json_object_set(byeJson, "action", byeStringJson);
+    
+  char* byeMessageChars = json_dumps(byeJson, 0);
+  string byeMessage = string(byeMessageChars);
+
+  cout << byeMessage << endl;
+
+  peerSocket->WrappedWrite(byeMessageChars, byeMessage.length());
+
+  json_decref(byeJson);
+  json_decref(byeStringJson);
+  free(byeMessageChars);
   
   cout << "Closing" << endl;
   
