@@ -12,10 +12,11 @@
 
 using namespace std;
 
-//int BUFSIZE = 1024;
 
 int recieveSendLoop(hw5_net::ClientSocket* clientSocket, CrushMain* gameInstance);
 
+
+//begins the client/model side of the program
 int main(int argc, char** argv){
   if (argc != 3){
     printf("Usage: ./CrushMain.cpp host port");
@@ -84,6 +85,8 @@ int main(int argc, char** argv){
   return 0;
 }
 
+//main loop which recieves an update, fires/settles, sends a gameinstance, and
+//repeats until the bye message is sent.
 int recieveSendLoop(hw5_net::ClientSocket* clientSocket, CrushMain* gameInstance){
   while(true){
 
