@@ -71,8 +71,13 @@ int main(int argc, char** argv){
     string toSend(serialized, strlen(serialized));
     clientSocket->WrappedWrite(toSend.c_str(), toSend.length());
     recieveSendLoop(clientSocket, gameInstance);
+    delete(gameInstance);
+    delete(clientSocket);
+    free(stringJson);
+    free((void *) serialized);
   } catch(string errString) {
     cout << errString << endl;
+    printf("error\n");
     return 1;
   }
   printf("exiting\n");
@@ -110,6 +115,13 @@ int recieveSendLoop(hw5_net::ClientSocket* clientSocket, CrushMain* gameInstance
     cout << stringJson << endl;
     json_error_t error;
     json_t* updateJson = json_loads(stringJson, 0, &error);
+    const char* action = json_string_value(json_object_get(updateJson, "action"));
+    if (action[0] == 'b'){ //bye message
+      printf("BYE\n");
+      json_decref(updateJson);
+      free(stringJson);
+      return 0;
+    }
     int row1 = json_integer_value(json_object_get(updateJson, "row"));
     int column1 = json_integer_value(json_object_get(updateJson, "column"));
     int direction = json_integer_value(json_object_get(updateJson, "direction"));
