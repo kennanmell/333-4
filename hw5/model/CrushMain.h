@@ -87,7 +87,7 @@ void fireTemplates() {
           swapArray2D(this->boardCandies, j, k, j, k + 1);
         }
 
-        setArray2D(this->boardCandies, getArray2D(extensionColor, j, extensionOffset[j] % (extensionColor->rows + 1)), j, k);
+        hsetArray2D(this->boardCandies, getArray2D(extensionColor, j, extensionOffset[j] % (extensionColor->rows + 1)), j, k);
 
         // Update score.
         int* remaining = (int*) getArray2D(this->boardState, j, i);
@@ -112,10 +112,10 @@ int findTemplates() {
       int curr = *((int*)getArray2D(this->boardCandies, j, i));
       if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, j, i + 1)) && curr == *((int*)getArray2D(this->boardCandies, j, i + 2)) && curr == *((int*)getArray2D(this->boardCandies, j, i + 3))) {
         result = 1;
-        setArray2D(this->boardCandies, &neg, j, i);
-        setArray2D(this->boardCandies, &neg, j, i + 1);
-        setArray2D(this->boardCandies, &neg, j, i + 2);
-        setArray2D(this->boardCandies, &neg, j, i + 3);
+        hsetArray2D(this->boardCandies, &neg, j, i);
+        hsetArray2D(this->boardCandies, &neg, j, i + 1);
+        hsetArray2D(this->boardCandies, &neg, j, i + 2);
+        hsetArray2D(this->boardCandies, &neg, j, i + 3);
       }
     }
   }
@@ -126,10 +126,10 @@ int findTemplates() {
       int curr = *((int*)getArray2D(this->boardCandies, j, i));
       if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, j + 1, i)) && curr == *((int*)getArray2D(this->boardCandies, j + 2, i)) && curr == *((int*)getArray2D(this->boardCandies, j + 3, i))) {
         result = 1;
-        setArray2D(this->boardCandies, &neg, j, i);
-        setArray2D(this->boardCandies, &neg, j + 1, i);
-        setArray2D(this->boardCandies, &neg, j + 2, i);
-        setArray2D(this->boardCandies, &neg, j + 3, i);
+        hsetArray2D(this->boardCandies, &neg, j, i);
+        hsetArray2D(this->boardCandies, &neg, j + 1, i);
+        hsetArray2D(this->boardCandies, &neg, j + 2, i);
+        hsetArray2D(this->boardCandies, &neg, j + 3, i);
       }
     }
   }
@@ -140,9 +140,9 @@ int findTemplates() {
       int curr = *((int*)getArray2D(this->boardCandies, j, i));
       if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, j, i + 1))&& curr == *((int*)getArray2D(this->boardCandies, j, i + 2))) {
         result = 1;
-        setArray2D(this->boardCandies, &neg, j, i);
-        setArray2D(this->boardCandies, &neg, j, i + 1);
-        setArray2D(this->boardCandies, &neg, j, i + 2);
+        hsetArray2D(this->boardCandies, &neg, j, i);
+        hsetArray2D(this->boardCandies, &neg, j, i + 1);
+        hsetArray2D(this->boardCandies, &neg, j, i + 2);
       }
     }
   }
@@ -153,15 +153,24 @@ int findTemplates() {
       int curr = *((int*)getArray2D(this->boardCandies, j, i));
       if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, j + 1, i)) && curr == *((int*)getArray2D(this->boardCandies, j + 2, i))) {
         result = 1;
-        setArray2D(this->boardCandies, &neg, j, i);
-        setArray2D(this->boardCandies, &neg, j + 1, i);
-        setArray2D(this->boardCandies, &neg, j + 2, i);
+        hsetArray2D(this->boardCandies, &neg, j, i);
+        hsetArray2D(this->boardCandies, &neg, j + 1, i);
+        hsetArray2D(this->boardCandies, &neg, j + 2, i);
       }
     }
   }
 
   return result;
 }
+
+    void hsetArray2D(Array2D arr, Array2DPayload_t val, int j, int i) {
+      //if ( *(int*)getArray2D(this->boardInitialState, j, i) == *(int*)getArray2D(this->boardState, j, i)){
+      //	free(getArray2D(this->boardCandies, j, i));
+      //	}
+      int* intPtr = (int*) getArray2D(this->boardCandies, j, i);
+      int* intPtr2 = (int*) val;
+      *intPtr = *intPtr2;
+    }
 };
 
 // Play the candy crush game with command line arguments argc, argv, the initial game state represented in JSON as stateJson, and the callback function to get new states (newStateMaker).
