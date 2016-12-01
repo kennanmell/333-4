@@ -159,6 +159,7 @@ int main(int argc, char *argv[]) {
     sock.BindAndListen(AF_INET, &socketFd);
     cout << "Created bound socket. port = " << sock.port() << endl;
 
+    while (true) {
     // wait for client connection
     int acceptedFd;
     string clientAddr;
@@ -242,26 +243,27 @@ int main(int argc, char *argv[]) {
     playWithSerializedBoard(argc, argv, json_deep_copy(json_object_get(resJson, "gameinstance")), &newStateMaker);
      
     json_decref(resJson);
+
+    // Send goodbye message.
+    json_t* byeJson = json_object();
+    json_t* byeStringJson = json_string("bye");
+    json_object_set(byeJson, "action", byeStringJson);
+    
+    char* byeMessageChars = json_dumps(byeJson, 0);
+    string byeMessage = string(byeMessageChars);
+
+    cout << byeMessage << endl;
+
+    peerSocket->WrappedWrite(byeMessageChars, byeMessage.length());
+
+    json_decref(byeJson);
+    json_decref(byeStringJson);
+    free(byeMessageChars);
+    }
   } catch(string errString) {
     cout << errString << endl;
     return 1;
   }
-
-  // Send goodbye message.
-  json_t* byeJson = json_object();
-  json_t* byeStringJson = json_string("bye");
-  json_object_set(byeJson, "action", byeStringJson);
-    
-  char* byeMessageChars = json_dumps(byeJson, 0);
-  string byeMessage = string(byeMessageChars);
-
-  cout << byeMessage << endl;
-
-  peerSocket->WrappedWrite(byeMessageChars, byeMessage.length());
-
-  json_decref(byeJson);
-  json_decref(byeStringJson);
-  free(byeMessageChars);
   
   cout << "Closing" << endl;
   
