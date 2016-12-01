@@ -135,6 +135,7 @@ int recieveSendLoop(hw5_net::ClientSocket* clientSocket, CrushMain* gameInstance
     cout << "TOSEND" << serialized << endl;
     string toSend(serialized, strlen(serialized));
     clientSocket->WrappedWrite(toSend.c_str(), toSend.length());
+    free(stringJson);
   }
   return 0;
 }
