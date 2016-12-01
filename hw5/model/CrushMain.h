@@ -7,7 +7,6 @@
 //The class used to store data about a game
 class CrushMain {
   public:
-  int* thingToFree = NULL; // thing to free
   int neg = -1; // used to represent a template that needs to be fired
   int gameid; //unique identifier
   Array2D extensionColor; //the extension grid
@@ -17,6 +16,7 @@ class CrushMain {
 
   Array2D boardCandies; //current candies on the board
   Array2D boardCandyTypes; //the type of each candy
+  int* thingToFree = NULL; // thing to free
   Array2D boardState; //how many times each square must fire
   Array2D boardType; //the type of each candy
   int movesMade; //how many moves have been made

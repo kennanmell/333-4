@@ -306,10 +306,6 @@ const char* serializeGameInstance(char* location){
   json_object_set_new(returned, "action", json_string("update"));
   json_object_set_new(returned, "gameinstance", out);
   char* result = json_dumps(returned, 0);
-  json_decref(out);
-  json_decref(jGameDef);
-  json_decref(jGameState);
-  json_decref(jExtensionOffset);
   json_decref(returned);
   return result;
 }
