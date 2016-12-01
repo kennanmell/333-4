@@ -78,14 +78,14 @@ int deserializeBoardCandiesFromJsonObject(json_t* json, Array2D* colors, Array2D
      return 1;
    }
    int arraySize = json_array_size(jData);
-   int* arr = (int*) malloc(sizeof(int) * arraySize);
-   int* arr2 = (int*) malloc(sizeof(int) * arraySize);
 
    for (int i = 0; i < arraySize; i++) {
-     arr[i] = json_integer_value(json_object_get(json_array_get(jData, i), "color"));
-     arr2[i] = json_integer_value(json_object_get(json_array_get(jData, i), "type"));
-     setArray2D(*colors, &arr[i], i % columns, i / columns);
-     setArray2D(*types, &arr2[i], i % columns, i / columns);
+     int* z1 = (int*) malloc(sizeof(int));
+     int* z2 = (int*) malloc(sizeof(int));
+     *z1 = json_integer_value(json_object_get(json_array_get(jData, i), "color"));
+     *z2 = json_integer_value(json_object_get(json_array_get(jData, i), "type"));
+     setArray2D(*colors, z1, i % columns, i / columns);
+     setArray2D(*types, z2, i % columns, i / columns);
    }
    
    return 0;
@@ -334,6 +334,8 @@ const char* serializeGameInstance(char* location){
   return result;
 }
 
+json_t* (*maker)(int, int, int, int);
+
 const char* serializeJsonForModel(char* location) {
   CrushMain* i = deserializeGameInstance(location);
   m = i;
@@ -350,14 +352,32 @@ const char* serializeServerMessage(CrushMain* model){
 
 // Used to call the global model's updateWithMove function, allowing for compatibility with C.
 void instanceCaller(int x1, int y1, int x2, int y2) {
-  m->updateWithMove(x1, y1, x2, y2);
+  json_t* newState = maker(x1, y1, x2, y2);
+  CrushMain* tempM = deserializeHelper(newState);
+  if (tempM != nullptr) {
+    m->gameid = tempM->gameid;
+    setAllArray2D(m->extensionColor, tempM->extensionColor);
+    setAllArray2D(m->boardInitialState, tempM->boardInitialState);
+    m->movesAllowed = tempM->movesAllowed;
+    m->colors = tempM->colors;
+    setAllArray2D(m->boardCandies, tempM->boardCandies);
+    setAllArray2D(m->boardCandyTypes, tempM->boardCandyTypes);
+    setAllArray2D(m->boardState, tempM->boardState);
+    setAllArray2D(m->boardType, tempM->boardType);
+    m->movesMade = tempM->movesMade;
+    m->currentScore = tempM->currentScore;
+    for (int i = 0; i < m->boardState->columns; i++) {
+      m->extensionOffset[i] = tempM->extensionOffset[i];
+    }
+    delete tempM;
+  }
 }
 
-int playWithSerializedBoard(int argc, char** argv){
-  m = deserializeGameInstance(argv[1]);
-  int found = m->updateWithMove(0, 0, 0, 0); // Make sure the initial game state is settled.
-  if (found) {
-    m->movesMade -= 1;
+int playWithSerializedBoard(int argc, char** argv, json_t* stateJson, json_t* (*newStateMaker)(int, int, int, int)){
+  maker = newStateMaker;
+  m = deserializeHelper(stateJson);
+  if (m == nullptr) {
+    return 1;
   }
 
   int result = runner(m->boardCandies, m->boardState, &(m->movesMade), &(m->currentScore), &instanceCaller, &serializeGameInstance, argc, argv);
