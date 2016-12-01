@@ -172,7 +172,7 @@ int deserializeBoardCandiesFromJsonObject(json_t* json, Array2D* colors, Array2D
 
 CrushMain* deserializeHelper(json_t* json);
 
-CrushMain* deserializeServerMessage(char* location);
+CrushMain* deserializeServerGameInstanceMessage(char* location);
 
 CrushMain* deserializeGameInstance(char* location);
 
@@ -181,6 +181,8 @@ json_t* serializeArray2DToJsonObject(Array2D array);
 json_t* serializeBoardCandiesToJsonObject(Array2D array, Array2D array2);
 
 const char* serializeGameInstance(char* location);
+
+const char* serializeServerMessage(CrushMain* model);
 
 void instanceCaller(int x1, int y1, int x2, int y2);
 
