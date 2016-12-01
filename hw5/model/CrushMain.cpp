@@ -220,7 +220,7 @@ CrushMain* deserializeHelper(json_t* json){
 //Given a char* to deserialize from, deserializes the given
 //string and creates a CrushMain object to represent that
 //game instance, and returns it. String must be in correct format
-CrushMain* deserializeServerMessage(char* location){
+CrushMain* deserializeServerGameInstanceMessage(char* location){
   json_error_t error;
   json_t* json = json_loads(location, 0, &error);
   if (!json){
@@ -320,9 +320,9 @@ const char* serializeGameInstance(char* location){
   }
 
   json_t* returned = json_object();
-  json_object_set_new(returned, "action", json_string("helloack"));
+  json_object_set_new(returned, "action", json_string("update"));
   json_object_set_new(returned, "gameinstance", out);
-  char* result = json_dumps(out, 0);
+  char* result = json_dumps(returned, 0);
   json_decref(out);
   json_decref(jGameDef);
   json_decref(jGameState);
@@ -337,6 +337,12 @@ const char* serializeJsonForModel(char* location) {
   const char* result = serializeGameInstance(NULL);
   delete i;
   return result;
+}
+
+const char* serializeServerMessage(CrushMain* model){
+  m = model;
+  const char* serialized = serializeGameInstance(NULL);
+  return serialized;
 }
 
 // Used to call the global model's updateWithMove function, allowing for compatibility with C.
