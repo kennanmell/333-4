@@ -16,6 +16,7 @@ class CrushMain {
 
   Array2D boardCandies; //current candies on the board
   Array2D boardCandyTypes; //the type of each candy
+  int* thingToFree = NULL; // thing to free
   Array2D boardState; //how many times each square must fire
   Array2D boardType; //the type of each candy
   int movesMade; //how many moves have been made
@@ -44,10 +45,13 @@ CrushMain(int gameid, Array2D extensionColor,
 ~CrushMain() {
   freeArray2D(extensionColor, &free);
   freeArray2D(boardInitialState, &free);
-  freeArray2D(boardCandies, &free);
+  freeArray2D(boardCandies, NULL);
   freeArray2D(boardCandyTypes, &free);
   freeArray2D(boardState, &free);
   free(extensionOffset);
+  if (thingToFree != NULL) {
+    free(thingToFree);
+  }
   //freeArray2D(boardType, NULL);
 }
 
@@ -164,12 +168,14 @@ int findTemplates() {
 }
 
     void hsetArray2D(Array2D arr, Array2DPayload_t val, int j, int i) {
-      //if ( *(int*)getArray2D(this->boardInitialState, j, i) == *(int*)getArray2D(this->boardState, j, i)){
-      //	free(getArray2D(this->boardCandies, j, i));
-      //	}
-      int* intPtr = (int*) getArray2D(this->boardCandies, j, i);
-      int* intPtr2 = (int*) val;
-      *intPtr = *intPtr2;
+      // long* returnVal = (long*) arr->head + i * (arr->columns + 1) + j;
+      // long *longPtr = getArray2D(arr, j, i);
+      //*returnVal = (long) val;
+      //int* intPtr = (int*) getArray2D(arr, j, i);
+      //int* intPtr2 = (int*) val;
+      
+      //*intPtr = *intPtr2;
+      setArray2D(arr, val, j, i);
     }
 };
 
@@ -185,7 +191,7 @@ Array2D deserializeInt2DArrayFromJsonObject(json_t* json);
 //"data" containing json objects which store ints "color" and "type", creates two
 //Array2Ds containing the color information and the type information. These two
 //arrays are given as out parameters.
-int deserializeBoardCandiesFromJsonObject(json_t* json, Array2D* colors, Array2D* types);
+int deserializeBoardCandiesFromJsonObject(json_t* json, Array2D* colors, Array2D* types, int** thingToFree);
 
 //deserializes the given json object into a CrushMain game
 //instance and returns it
