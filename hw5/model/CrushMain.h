@@ -164,26 +164,52 @@ int findTemplates() {
 }
 };
 
+// Play the candy crush game with command line arguments argc, argv, the initial game state represented in JSON as stateJson, and the callback function to get new states (newStateMaker).
 int playWithSerializedBoard(int argc, char** argv, json_t* stateJson, json_t* (*newStateMaker)(int, int, int, int));
 
+//Given a json object which contains int fields "rows" and "columns",
+//and an array field of ints "data", creates an Array2D representing that
+//object and returns it
 Array2D deserializeInt2DArrayFromJsonObject(json_t* json);
 
+//Given a json object containing int fields "rows" and "columns", and an array field
+//"data" containing json objects which store ints "color" and "type", creates two
+//Array2Ds containing the color information and the type information. These two
+//arrays are given as out parameters.
 int deserializeBoardCandiesFromJsonObject(json_t* json, Array2D* colors, Array2D* types);
 
+//deserializes the given json object into a CrushMain game
+//instance and returns it
 CrushMain* deserializeHelper(json_t* json);
 
+//Given a char* to deserialize from, deserializes the given
+//string and creates a CrushMain object to represent that
+//game instance, and returns it. String must be in correct format
 CrushMain* deserializeServerGameInstanceMessage(char* location);
 
+//Given a file name to deserialize from, deserializes the given file
+//and creates a CrushMain object to represent that game instance.
+//pre: The file must be of the correct format
 CrushMain* deserializeGameInstance(char* location);
 
+//Given a Array2D of ints, creates and returns a json object representing that Array2D.
+//The json object will have a "rows" field, a "columns" field, and a "data" array
+//which will have the data of the Array2D.
 json_t* serializeArray2DToJsonObject(Array2D array);
 
+//Serializes two arrays representing board candy colors and board candy types
+//into a single json object. The json object will have int field "rows", "columns",
+//and an array called "data" which contains json objects which have the int fields
+//"color" and "type". Returns this as a pointer
 json_t* serializeBoardCandiesToJsonObject(Array2D array, Array2D array2);
 
+//Given a location to write out to, serializes the current game instance.
 const char* serializeGameInstance(char* location);
 
+// Serializes model to JSON representation and returns that representation.
 const char* serializeServerMessage(CrushMain* model);
 
+// Used to call the global model's updateWithMove function, allowing for compatibility with C.
 void instanceCaller(int x1, int y1, int x2, int y2);
 
 #endif /* _CrushMain_h */

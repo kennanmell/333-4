@@ -9,16 +9,12 @@
 
 using namespace std;
 
-  int zero = 0; // used to represent the default candy type
+int zero = 0; // used to represent the default candy type
 
 
-
+// The "global" CrushMain. Used when working with a CrushView, since c classes can't deal with instances of C++ objects.
 CrushMain *m;
-int* arr;
 
-//Given a json object which contains int fields "rows" and "columns",
-//and an array field of ints "data", creates an Array2D representing that
-//object and returns it
 Array2D deserializeInt2DArrayFromJsonObject(json_t* json) {
    json_t* jRows = json_object_get(json, "rows");
 
@@ -40,7 +36,6 @@ Array2D deserializeInt2DArrayFromJsonObject(json_t* json) {
       return NULL;
    }
    int arraySize = json_array_size(jData);
-   //arr = (int*) malloc(sizeof(int) * arraySize);
 
    for (int i = 0; i < arraySize; i++) {
      //arr[i] = json_integer_value(json_array_get(jData, i));
@@ -52,10 +47,6 @@ Array2D deserializeInt2DArrayFromJsonObject(json_t* json) {
    return array;
 }
 
-//Given a json object containing int fields "rows" and "columns", and an array field
-//"data" containing json objects which store ints "color" and "type", creates two
-//Array2Ds containing the color information and the type information. These two
-//arrays are given as out parameters.
 int deserializeBoardCandiesFromJsonObject(json_t* json, Array2D* colors, Array2D* types) {
    json_t* jRows = json_object_get(json, "rows");
 
@@ -91,8 +82,6 @@ int deserializeBoardCandiesFromJsonObject(json_t* json, Array2D* colors, Array2D
    return 0;
 }
 
-//deserializes the given json object into a CrushMain game
-//instance and returns it
 CrushMain* deserializeHelper(json_t* json){
   //game def
   json_t* gameDef = json_object_get(json, "gamedef");
@@ -220,9 +209,6 @@ CrushMain* deserializeHelper(json_t* json){
   return result;
 }
 
-//Given a char* to deserialize from, deserializes the given
-//string and creates a CrushMain object to represent that
-//game instance, and returns it. String must be in correct format
 CrushMain* deserializeServerGameInstanceMessage(char* location){
   json_error_t error;
   json_t* json = json_loads(location, 0, &error);
@@ -233,9 +219,6 @@ CrushMain* deserializeServerGameInstanceMessage(char* location){
   return deserializeHelper(gameInstance);
 }
 
-//Given a file name to deserialize from, deserializes the given file
-//and creates a CrushMain object to represent that game instance.
-//pre: The file must be of the correct format
 CrushMain* deserializeGameInstance(char* location){
   json_error_t error;
   json_t* json = json_load_file(location, 0, &error);
@@ -245,9 +228,6 @@ CrushMain* deserializeGameInstance(char* location){
   return deserializeHelper(json);
 }
 
-//Given a Array2D of ints, creates and returns a json object representing that Array2D.
-//The json object will have a "rows" field, a "columns" field, and a "data" array
-//which will have the data of the Array2D.
 json_t* serializeArray2DToJsonObject(Array2D array){
   json_t* out = json_object();
   json_t* jArr = json_array();
@@ -264,10 +244,6 @@ json_t* serializeArray2DToJsonObject(Array2D array){
   return out;
 }
 
-//Serializes two arrays representing board candy colors and board candy types
-//into a single json object. The json object will have int field "rows", "columns",
-//and an array called "data" which contains json objects which have the int fields
-//"color" and "type". Returns this as a pointer
 json_t* serializeBoardCandiesToJsonObject(Array2D array, Array2D array2){
   json_t* out = json_object();
   json_t* jArr = json_array();
@@ -288,7 +264,6 @@ json_t* serializeBoardCandiesToJsonObject(Array2D array, Array2D array2){
   return out;
 }
 
-//Given a location to write out to, serializes the current game instance.
 const char* serializeGameInstance(char* location){
   CrushMain* model = m;
   json_t* out = json_object();
@@ -336,40 +311,19 @@ const char* serializeGameInstance(char* location){
 
 json_t* (*maker)(int, int, int, int);
 
-const char* serializeJsonForModel(char* location) {
-  CrushMain* i = deserializeGameInstance(location);
-  m = i;
-  const char* result = serializeGameInstance(NULL);
-  delete i;
-  return result;
-}
-
 const char* serializeServerMessage(CrushMain* model){
   m = model;
   const char* serialized = serializeGameInstance(NULL);
   return serialized;
 }
 
-// Used to call the global model's updateWithMove function, allowing for compatibility with C.
 void instanceCaller(int x1, int y1, int x2, int y2) {
   json_t* newState = maker(x1, y1, x2, y2);
   CrushMain* tempM = deserializeHelper(newState);
   if (tempM != nullptr) {
-    m->gameid = tempM->gameid;
-    setAllArray2D(m->extensionColor, tempM->extensionColor);
-    setAllArray2D(m->boardInitialState, tempM->boardInitialState);
-    m->movesAllowed = tempM->movesAllowed;
-    m->colors = tempM->colors;
-    setAllArray2D(m->boardCandies, tempM->boardCandies);
-    setAllArray2D(m->boardCandyTypes, tempM->boardCandyTypes);
-    setAllArray2D(m->boardState, tempM->boardState);
-    setAllArray2D(m->boardType, tempM->boardType);
-    m->movesMade = tempM->movesMade;
-    m->currentScore = tempM->currentScore;
-    for (int i = 0; i < m->boardState->columns; i++) {
-      m->extensionOffset[i] = tempM->extensionOffset[i];
-    }
-    delete tempM;
+    delete m;
+    m = tempM;
+    updateState(m->boardCandies, m->boardState, &(m->movesMade), &(m->currentScore));
   }
 }
 
@@ -383,6 +337,5 @@ int playWithSerializedBoard(int argc, char** argv, json_t* stateJson, json_t* (*
   int result = runner(m->boardCandies, m->boardState, &(m->movesMade), &(m->currentScore), &instanceCaller, &serializeGameInstance, argc, argv);
 
   delete m;
-  free(arr);
   return result;
 }
