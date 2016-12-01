@@ -58,9 +58,6 @@ int main(int argc, char** argv){
       }
     } while (curlyBraceCount != 0);
     stringJson[size] = '\0';
-    //cout.flush();
-    //cout << "done" << endl;
-    //printf("stringJson: %s\n", stringJson);
     
     //deserialize and settle
     CrushMain* gameInstance = deserializeServerGameInstanceMessage(stringJson);
@@ -135,6 +132,9 @@ int recieveSendLoop(hw5_net::ClientSocket* clientSocket, CrushMain* gameInstance
     cout << "TOSEND" << serialized << endl;
     string toSend(serialized, strlen(serialized));
     clientSocket->WrappedWrite(toSend.c_str(), toSend.length());
+    free((void *) serialized);
+    json_decref(updateJson);
+    //free(updateJson);
     free(stringJson);
   }
   return 0;

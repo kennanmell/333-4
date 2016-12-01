@@ -42,11 +42,11 @@ CrushMain(int gameid, Array2D extensionColor,
 }
 
 ~CrushMain() {
-  freeArray2D(extensionColor, NULL);
-  freeArray2D(boardInitialState, NULL);
-  freeArray2D(boardCandies, NULL);
-  freeArray2D(boardCandyTypes, NULL);
-  freeArray2D(boardState, NULL);
+  freeArray2D(extensionColor, &free);
+  freeArray2D(boardInitialState, &free);
+  freeArray2D(boardCandies, &free);
+  freeArray2D(boardCandyTypes, &free);
+  freeArray2D(boardState, &free);
   free(extensionOffset);
   //freeArray2D(boardType, NULL);
 }
