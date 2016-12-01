@@ -40,11 +40,14 @@ Array2D deserializeInt2DArrayFromJsonObject(json_t* json) {
       return NULL;
    }
    int arraySize = json_array_size(jData);
-   arr = (int*) malloc(sizeof(int) * arraySize);
+   //arr = (int*) malloc(sizeof(int) * arraySize);
 
    for (int i = 0; i < arraySize; i++) {
-     arr[i] = json_integer_value(json_array_get(jData, i));
-      setArray2D(array, &arr[i], i % columns, i / columns);
+     //arr[i] = json_integer_value(json_array_get(jData, i));
+     // setArray2D(array, &arr[i], i % columns, i / columns);
+     int* element = (int*) malloc(sizeof(int));
+     *element = json_integer_value(json_array_get(jData, i));
+     setArray2D(array, &element, i % columns, i / columns);
    }
    return array;
 }
