@@ -14,7 +14,6 @@ using namespace std;
 
 
 CrushMain *m;
-int* arr;
 
 //Given a json object which contains int fields "rows" and "columns",
 //and an array field of ints "data", creates an Array2D representing that
@@ -40,7 +39,6 @@ Array2D deserializeInt2DArrayFromJsonObject(json_t* json) {
       return NULL;
    }
    int arraySize = json_array_size(jData);
-   //arr = (int*) malloc(sizeof(int) * arraySize);
 
    for (int i = 0; i < arraySize; i++) {
      //arr[i] = json_integer_value(json_array_get(jData, i));
@@ -336,14 +334,6 @@ const char* serializeGameInstance(char* location){
 
 json_t* (*maker)(int, int, int, int);
 
-const char* serializeJsonForModel(char* location) {
-  CrushMain* i = deserializeGameInstance(location);
-  m = i;
-  const char* result = serializeGameInstance(NULL);
-  delete i;
-  return result;
-}
-
 const char* serializeServerMessage(CrushMain* model){
   m = model;
   const char* serialized = serializeGameInstance(NULL);
@@ -355,21 +345,9 @@ void instanceCaller(int x1, int y1, int x2, int y2) {
   json_t* newState = maker(x1, y1, x2, y2);
   CrushMain* tempM = deserializeHelper(newState);
   if (tempM != nullptr) {
-    m->gameid = tempM->gameid;
-    setAllArray2D(m->extensionColor, tempM->extensionColor);
-    setAllArray2D(m->boardInitialState, tempM->boardInitialState);
-    m->movesAllowed = tempM->movesAllowed;
-    m->colors = tempM->colors;
-    setAllArray2D(m->boardCandies, tempM->boardCandies);
-    setAllArray2D(m->boardCandyTypes, tempM->boardCandyTypes);
-    setAllArray2D(m->boardState, tempM->boardState);
-    setAllArray2D(m->boardType, tempM->boardType);
-    m->movesMade = tempM->movesMade;
-    m->currentScore = tempM->currentScore;
-    for (int i = 0; i < m->boardState->columns; i++) {
-      m->extensionOffset[i] = tempM->extensionOffset[i];
-    }
-    delete tempM;
+    delete m;
+    m = tempM;
+    updateState(m->boardCandies, m->boardState, &(m->movesMade), &(m->currentScore));
   }
 }
 
@@ -383,6 +361,5 @@ int playWithSerializedBoard(int argc, char** argv, json_t* stateJson, json_t* (*
   int result = runner(m->boardCandies, m->boardState, &(m->movesMade), &(m->currentScore), &instanceCaller, &serializeGameInstance, argc, argv);
 
   delete m;
-  free(arr);
   return result;
 }

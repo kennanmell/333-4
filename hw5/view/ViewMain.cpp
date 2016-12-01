@@ -61,7 +61,7 @@ int getModelResponse(hw5_net::ClientSocket* peerSocket, json_t** responseJson) {
     json_error_t error;
     json_t* resJson = json_loads(stringJson, 0, &error);
 
-    //free(stringJson);
+    free(stringJson);
 
     if (!resJson) {
       printf("Response is not json value.");
@@ -76,18 +76,30 @@ int getModelResponse(hw5_net::ClientSocket* peerSocket, json_t** responseJson) {
 json_t* newStateMaker(int x1, int y1, int x2, int y2) {
    // Send update message.
    json_t* sendJson = json_object();
-   json_object_set(sendJson, "action", json_string("move"));
-   json_object_set(sendJson, "row", json_integer(y1));
-   json_object_set(sendJson, "column", json_integer(x1));
+   json_t* xIntJson = json_integer(y1);
+   json_t* yIntJson = json_integer(x1);
+
+   json_t* moveStringJson = json_string("move");
+
+   json_object_set(sendJson, "action", moveStringJson);
+   json_object_set(sendJson, "row", xIntJson);
+   json_object_set(sendJson, "column", yIntJson);
+
+   json_t* directionJson;
    if (x1 == x2 + 1) {
-     json_object_set(sendJson, "direction", json_integer(0));
+     // left
+     directionJson = json_integer(0);
    } else if (x1 == x2 - 1) {
-     json_object_set(sendJson, "direction", json_integer(1));
+     // right
+     directionJson = json_integer(1);
    } else if (y1 == y2 - 1) {
-     json_object_set(sendJson, "direction", json_integer(2));
+     // up
+     directionJson = json_integer(2);
    } else { // y1 == y2 + 1
-     json_object_set(sendJson, "direction", json_integer(3));
+     // down
+     directionJson = json_integer(3);
    }
+   json_object_set(sendJson, "direction", directionJson);
 
    char* moveChars = json_dumps(sendJson, 0);
    string moveMessage = string(moveChars);
@@ -95,7 +107,11 @@ json_t* newStateMaker(int x1, int y1, int x2, int y2) {
    cout << moveMessage << endl;
 
    peerSocket->WrappedWrite(moveMessage.c_str(), moveMessage.length());
+   json_decref(xIntJson);
+   json_decref(yIntJson);
    json_decref(sendJson);
+   json_decref(moveStringJson);
+   json_decref(directionJson);
    free(moveChars);
 
    // Wait for move message.
@@ -112,7 +128,9 @@ json_t* newStateMaker(int x1, int y1, int x2, int y2) {
      return NULL;
    }
    
-   return json_object_get(resJson, "gameinstance");
+   json_t* result = json_deep_copy(json_object_get(resJson, "gameinstance"));
+   json_decref(resJson);
+   return result;
 }
 
 int main(int argc, char *argv[]) {
@@ -186,13 +204,16 @@ int main(int argc, char *argv[]) {
     }
     json_object_set_new(helloackJson, "action", json_string("helloack"));
     json_object_set_new(helloackJson, "gameinstance", gameInstanceJson);
-    string helloackMessage = string(json_dumps(helloackJson, 0));
+    
+    char* helloackMessageChars = json_dumps(helloackJson, 0);
+    string helloackMessage = string(helloackMessageChars);
 
     cout << helloackMessage << endl;
 
-    peerSocket->WrappedWrite(helloackMessage.c_str(), helloackMessage.length());
+    peerSocket->WrappedWrite(helloackMessageChars, helloackMessage.length());
 
     json_decref(helloackJson);
+    free(helloackMessageChars);
 
     // Look for update message.
 
@@ -210,8 +231,9 @@ int main(int argc, char *argv[]) {
     printf("through update call");
 
     // Display game
-    playWithSerializedBoard(argc, argv, json_object_get(resJson, "gameinstance"), &newStateMaker);
-
+    playWithSerializedBoard(argc, argv, json_deep_copy(json_object_get(resJson, "gameinstance")), &newStateMaker);
+     
+    json_decref(resJson);
   } catch(string errString) {
     cout << errString << endl;
     return 1;

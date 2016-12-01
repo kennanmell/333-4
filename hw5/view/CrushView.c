@@ -14,6 +14,13 @@ int* scorePtr;
 void (*swapHelper)(int, int, int, int);
 const char* (*serializeHelper)(char*);
 
+void updateState(Array2D arr, Array2D state, int* moves, int* score) {
+  md->arr = arr;
+  md->state = state;
+  movesPtr = moves;
+  scorePtr = score;
+}
+
 // Prepares (draws) the view.
 void prepareView(int gridSquareDimension){
 

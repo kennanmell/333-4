@@ -32,9 +32,6 @@ int swapArray2D(Array2D array, int x1, int y1, int x2, int y2);
 // Sets the value at (x, y) to value in array. Returns 1 if array is null, 2 if the index (x,y) is out of bounds, and 0 otherwise.
 int setArray2D(Array2D array, void* value, int x, int y);
 
-// Sets all values in oldArray to match newArray. Return 1 if either array is null or if the arrays don't have the same dimensions, and 0 otherwise.
-int setAllArray2D(Array2D oldArray, Array2D newArray);
-
 // Allocates a new Array2D with dimensions x-by-y. Returns NULL if there is not enough memory to allocate the 2D array.
 Array2D allocateArray2D(int x, int y);
 

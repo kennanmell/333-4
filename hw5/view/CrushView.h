@@ -30,6 +30,9 @@ void candySelect(GtkWidget *widget, gpointer data);
 //game to output.json
 void serializeBoard(GtkWidget *widget, gpointer data);
 
+// Updates the model to point at a new array, state, moves, and score.
+void updateState(Array2D arr, Array2D state, int* moves, int* score);
+
 //Is called after main when the program is run with a command line argument (which should be all
 // the time). Sets up the window, view, and makes it visible.
 void g_application_open(GApplication *application, GFile **files, gint n_files, const gchar *hint);
