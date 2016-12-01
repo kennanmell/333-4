@@ -47,7 +47,7 @@ Array2D deserializeInt2DArrayFromJsonObject(json_t* json) {
    return array;
 }
 
-int deserializeBoardCandiesFromJsonObject(json_t* json, Array2D* colors, Array2D* types) {
+int deserializeBoardCandiesFromJsonObject(json_t* json, Array2D* colors, Array2D* types, int** thingToFree) {
    json_t* jRows = json_object_get(json, "rows");
 
    if (!json_is_integer(jRows)) {
@@ -70,12 +70,13 @@ int deserializeBoardCandiesFromJsonObject(json_t* json, Array2D* colors, Array2D
    }
    int arraySize = json_array_size(jData);
 
+   int* arr = (int*) malloc(sizeof(int) * arraySize);
+   *thingToFree = arr;
    for (int i = 0; i < arraySize; i++) {
-     int* z1 = (int*) malloc(sizeof(int));
      int* z2 = (int*) malloc(sizeof(int));
-     *z1 = json_integer_value(json_object_get(json_array_get(jData, i), "color"));
+     arr[i] = json_integer_value(json_object_get(json_array_get(jData, i), "color"));
      *z2 = json_integer_value(json_object_get(json_array_get(jData, i), "type"));
-     setArray2D(*colors, z1, i % columns, i / columns);
+     setArray2D(*colors, &arr[i], i % columns, i / columns);
      setArray2D(*types, z2, i % columns, i / columns);
    }
    
@@ -83,6 +84,8 @@ int deserializeBoardCandiesFromJsonObject(json_t* json, Array2D* colors, Array2D
 }
 
 CrushMain* deserializeHelper(json_t* json){
+  int* thingToFree = NULL;
+
   //game def
   json_t* gameDef = json_object_get(json, "gamedef");
 
@@ -122,7 +125,7 @@ CrushMain* deserializeHelper(json_t* json){
     
     //boardCandies and candy types
     json_t* jBoardCandies = json_object_get(gameState, "boardcandies");
-    deserializeBoardCandiesFromJsonObject(jBoardCandies, &boardCandies, &boardCandyTypes);
+    deserializeBoardCandiesFromJsonObject(jBoardCandies, &boardCandies, &boardCandyTypes, &thingToFree);
     printf("board candies:\n");
     printArray(boardCandies);
     printf("board types:\n");
@@ -205,6 +208,7 @@ CrushMain* deserializeHelper(json_t* json){
     printf("\n");
   }
   CrushMain* result = new CrushMain(gameid, extensionColor, boardInitialState, movesAllowed, colors, boardCandies, boardCandyTypes,  boardState, movesMade, currentScore, extensionOffset);
+  result->thingToFree = thingToFree;
   json_decref(json);
   return result;
 }
@@ -215,7 +219,8 @@ CrushMain* deserializeServerGameInstanceMessage(char* location){
   if (!json){
     return nullptr;
   }
-  json_t* gameInstance = json_object_get(json, "gameinstance");
+  json_t* gameInstance = json_deep_copy(json_object_get(json, "gameinstance"));
+  json_decref(json);
   return deserializeHelper(gameInstance);
 }
 
