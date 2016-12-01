@@ -83,7 +83,7 @@ int main(int argc, char** argv){
 }
 
 int recieveSendLoop(hw5_net::ClientSocket* clientSocket, CrushMain* gameInstance){
-  //while(true){
+  while(true){
 
     int curlyBraceCount = 0;
     char* stringJson = (char*) malloc(sizeof(char) * BUFSIZE);
@@ -123,16 +123,18 @@ int recieveSendLoop(hw5_net::ClientSocket* clientSocket, CrushMain* gameInstance
     } else if (direction == 1){ //right
       column2++;
     } else if (direction == 2){
-      row2--;
-    } else {
       row2++;
+    } else {
+      row2--;
     }
-    gameInstance->updateWithMove(row1, column1, row2, column2);
+    cout << "(" << row1 << ", " << column1 << ") (" << row2 << ", " << column2 << ")" << endl;
+    gameInstance->updateWithMove(column1, row1, column2, row2);
+    printf("Moves made:%d\n", gameInstance->movesMade);
     printf("updated\n");
     const char* serialized = (serializeServerMessage(gameInstance));
-    cout << serialized << endl;
+    cout << "TOSEND" << serialized << endl;
     string toSend(serialized, strlen(serialized));
     clientSocket->WrappedWrite(toSend.c_str(), toSend.length());
-    return 0;
-    // }
+  }
+  return 0;
 }
