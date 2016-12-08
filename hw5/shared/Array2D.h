@@ -35,6 +35,11 @@ int setArray2D(Array2D array, void* value, int x, int y);
 // Allocates a new Array2D with dimensions x-by-y. Returns NULL if there is not enough memory to allocate the 2D array.
 Array2D allocateArray2D(int x, int y);
 
+// Deep-copies all values in an Array2D containing only ints. Returns NULL if other is null. Behavior is undefined if other doesn't contain ints.
+Array2D copyArray2D(Array2D other);
+
+Array2D notDeepCopyArray2D(Array2D other);
+
 // Frees the Array2D array, does nothing if array is null. Payload_free_function can be passed to free all the payloads in the array. Not used if NULL.
 void freeArray2D(Array2D array, Array2DPayloadFreeFnPtr payload_free_function);
 

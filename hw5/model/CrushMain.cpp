@@ -1,10 +1,8 @@
 #include <stdlib.h>
-#include "../view/CrushView.h"
 #include <iostream>
 
 #include "../shared/ClientSocket.h"
 #include "../shared/ServerSocket.h"
-#include "../view/CrushView.h"
 #include "CrushMain.h"
 
 using namespace std;
@@ -269,7 +267,7 @@ json_t* serializeBoardCandiesToJsonObject(Array2D array, Array2D array2){
   return out;
 }
 
-const char* serializeGameInstance(char* location){
+json_t* serializeGameInstance(CrushMain* m, char* location){
   CrushMain* model = m;
   json_t* out = json_object();
 
@@ -302,41 +300,5 @@ const char* serializeGameInstance(char* location){
     json_dump_file(out, location, 0);
   }
 
-  json_t* returned = json_object();
-  json_object_set_new(returned, "action", json_string("update"));
-  json_object_set_new(returned, "gameinstance", out);
-  char* result = json_dumps(returned, 0);
-  json_decref(returned);
-  return result;
-}
-
-json_t* (*maker)(int, int, int, int);
-
-const char* serializeServerMessage(CrushMain* model){
-  m = model;
-  const char* serialized = serializeGameInstance(NULL);
-  return serialized;
-}
-
-void instanceCaller(int x1, int y1, int x2, int y2) {
-  json_t* newState = maker(x1, y1, x2, y2);
-  CrushMain* tempM = deserializeHelper(newState);
-  if (tempM != nullptr) {
-    delete m;
-    m = tempM;
-    updateState(m->boardCandies, m->boardState, &(m->movesMade), &(m->currentScore));
-  }
-}
-
-int playWithSerializedBoard(int argc, char** argv, json_t* stateJson, json_t* (*newStateMaker)(int, int, int, int)){
-  maker = newStateMaker;
-  m = deserializeHelper(stateJson);
-  if (m == nullptr) {
-    return 1;
-  }
-
-  int result = runner(m->boardCandies, m->boardState, &(m->movesMade), &(m->currentScore), &instanceCaller, &serializeGameInstance, argc, argv);
-
-  delete m;
-  return result;
+  return out;
 }

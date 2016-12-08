@@ -1,5 +1,5 @@
-SRC=model/CrushMain.cpp shared/ClientSocket.cc shared/Verify333.c shared/Array2D.c shared/CSE333Socket.cc model/CrushModel.c shared/ServerSocket.cc model/CrushClient.cpp view/CrushView.c # change these to your source file names
-HEADERS=view/CrushView.h shared/Array2D.h model/CrushModel.h shared/CSE333Socket.h model/CrushMain.h shared/ClientSocket.h shared/ServerSocket.h shared/CSE333.h
+SRC=model/CrushMain.cpp shared/ClientSocket.cc shared/Verify333.c shared/Array2D.c shared/CSE333Socket.cc model/CrushModel.c shared/ServerSocket.cc model/hw6/CrushSolver.cpp # change these to your source file names
+HEADERS=shared/Array2D.h model/CrushModel.h shared/CSE333Socket.h model/CrushMain.h shared/ClientSocket.h shared/ServerSocket.h shared/CSE333.h
 CFLAGS = -Wall -Wpedantic -std=c++11
 IFLAGS =  -I../hw2 -I../jansson/include
 GTKCFLAGS = `pkg-config --cflags gtk+-3.0`

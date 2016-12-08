@@ -3,6 +3,8 @@
 
 #include "../shared/Array2D.h"
 #include <jansson.h>
+#include <stdio.h>
+#include <string.h>
 
 //The class used to store data about a game
 class CrushMain {
@@ -42,6 +44,21 @@ CrushMain(int gameid, Array2D extensionColor,
   this->extensionOffset = extensionOffset;
 }
 
+CrushMain (const CrushMain &obj) {
+  this->gameid = obj.gameid;
+  this->extensionColor = copyArray2D(obj.extensionColor);
+  this->boardInitialState = copyArray2D(obj.boardInitialState);
+  this->movesAllowed = obj.movesAllowed;
+  this->colors = obj.colors;
+  this->boardCandies = notDeepCopyArray2D(obj.boardCandies);
+  this->boardCandyTypes = copyArray2D(obj.boardCandyTypes);
+  this->boardState = copyArray2D(obj.boardState);
+  this->movesMade = obj.movesMade;
+  this->currentScore = obj.currentScore;
+  this->extensionOffset = (int*) malloc(sizeof(int) * (this->boardState->columns + 1));
+  memcpy(this->extensionOffset, obj.extensionOffset, sizeof(int) * (this->boardState->columns + 1));
+}
+
 ~CrushMain() {
   freeArray2D(extensionColor, &free);
   freeArray2D(boardInitialState, &free);
@@ -49,10 +66,17 @@ CrushMain(int gameid, Array2D extensionColor,
   freeArray2D(boardCandyTypes, &free);
   freeArray2D(boardState, &free);
   free(extensionOffset);
-  if (thingToFree != NULL) {
-    free(thingToFree);
-  }
+  //if (thingToFree != NULL) {
+  //  free(thingToFree);
+  //}
   //freeArray2D(boardType, NULL);
+}
+
+int checkIfValidMove(int x1, int y1, int x2, int y2) {
+   swapArray2D(this->boardCandies, x1, y1, x2, y2);
+   int result = this->findTemplates(0);
+   swapArray2D(this->boardCandies, x1, y1, x2, y2);
+   return result;
 }
 
 // Repeats the process of finding and firing templates until no templates are found. Updates moves remaining, etc. accordingly. Returns the number of templates found.
@@ -66,7 +90,7 @@ int updateWithMove(int x1, int y1, int x2, int y2) {
 
   int found = 0;
   int arbitraryMagicNumber = 1000; // max template firings per move
-  while (found < arbitraryMagicNumber && this->findTemplates()) {
+  while (found < arbitraryMagicNumber && this->findTemplates(1)) {
     found += 1;
     this->fireTemplates();
   }
@@ -107,7 +131,7 @@ void fireTemplates() {
 }
 
 // Finds all existing templates on the board. Returns 1 if it finds at least one template, 0 if none are found. Sets all tiles on the board included in a template to neg, indicating that they are ready to fire using fireTemplates.
-int findTemplates() {
+int findTemplates(int flag) {
   int result = 0;
 
   // Vertical 4-in-a-row
@@ -116,10 +140,12 @@ int findTemplates() {
       int curr = *((int*)getArray2D(this->boardCandies, j, i));
       if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, j, i + 1)) && curr == *((int*)getArray2D(this->boardCandies, j, i + 2)) && curr == *((int*)getArray2D(this->boardCandies, j, i + 3))) {
         result = 1;
-        hsetArray2D(this->boardCandies, &neg, j, i);
-        hsetArray2D(this->boardCandies, &neg, j, i + 1);
-        hsetArray2D(this->boardCandies, &neg, j, i + 2);
-        hsetArray2D(this->boardCandies, &neg, j, i + 3);
+        if (flag) {
+          hsetArray2D(this->boardCandies, &neg, j, i);
+          hsetArray2D(this->boardCandies, &neg, j, i + 1);
+          hsetArray2D(this->boardCandies, &neg, j, i + 2);
+          hsetArray2D(this->boardCandies, &neg, j, i + 3);
+        }
       }
     }
   }
@@ -130,10 +156,12 @@ int findTemplates() {
       int curr = *((int*)getArray2D(this->boardCandies, j, i));
       if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, j + 1, i)) && curr == *((int*)getArray2D(this->boardCandies, j + 2, i)) && curr == *((int*)getArray2D(this->boardCandies, j + 3, i))) {
         result = 1;
-        hsetArray2D(this->boardCandies, &neg, j, i);
-        hsetArray2D(this->boardCandies, &neg, j + 1, i);
-        hsetArray2D(this->boardCandies, &neg, j + 2, i);
-        hsetArray2D(this->boardCandies, &neg, j + 3, i);
+        if (flag) {
+          hsetArray2D(this->boardCandies, &neg, j, i);
+          hsetArray2D(this->boardCandies, &neg, j + 1, i);
+          hsetArray2D(this->boardCandies, &neg, j + 2, i);
+          hsetArray2D(this->boardCandies, &neg, j + 3, i);
+        }
       }
     }
   }
@@ -144,9 +172,11 @@ int findTemplates() {
       int curr = *((int*)getArray2D(this->boardCandies, j, i));
       if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, j, i + 1))&& curr == *((int*)getArray2D(this->boardCandies, j, i + 2))) {
         result = 1;
-        hsetArray2D(this->boardCandies, &neg, j, i);
-        hsetArray2D(this->boardCandies, &neg, j, i + 1);
-        hsetArray2D(this->boardCandies, &neg, j, i + 2);
+        if (flag) {
+          hsetArray2D(this->boardCandies, &neg, j, i);
+          hsetArray2D(this->boardCandies, &neg, j, i + 1);
+          hsetArray2D(this->boardCandies, &neg, j, i + 2);
+        }
       }
     }
   }
@@ -157,9 +187,11 @@ int findTemplates() {
       int curr = *((int*)getArray2D(this->boardCandies, j, i));
       if (curr != neg && curr == *((int*)getArray2D(this->boardCandies, j + 1, i)) && curr == *((int*)getArray2D(this->boardCandies, j + 2, i))) {
         result = 1;
-        hsetArray2D(this->boardCandies, &neg, j, i);
-        hsetArray2D(this->boardCandies, &neg, j + 1, i);
-        hsetArray2D(this->boardCandies, &neg, j + 2, i);
+        if (flag) {
+          hsetArray2D(this->boardCandies, &neg, j, i);
+          hsetArray2D(this->boardCandies, &neg, j + 1, i);
+          hsetArray2D(this->boardCandies, &neg, j + 2, i);
+        }
       }
     }
   }
@@ -218,11 +250,8 @@ json_t* serializeArray2DToJsonObject(Array2D array);
 //"color" and "type". Returns this as a pointer
 json_t* serializeBoardCandiesToJsonObject(Array2D array, Array2D array2);
 
-//Given a location to write out to, serializes the current game instance.
-const char* serializeGameInstance(char* location);
-
-// Serializes model to JSON representation and returns that representation.
-const char* serializeServerMessage(CrushMain* model);
+//Given a location to write out to and a CrushMain to serialize, writes and returns the JSON representation.
+json_t* serializeGameInstance(CrushMain* m, char* location);
 
 // Used to call the global model's updateWithMove function, allowing for compatibility with C.
 void instanceCaller(int x1, int y1, int x2, int y2);

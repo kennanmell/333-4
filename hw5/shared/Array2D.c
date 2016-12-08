@@ -120,6 +120,36 @@ int setArray2D(Array2D array, Array2DPayload_t value, int x, int y) {
     return 0;
 }
 
+Array2D copyArray2D(Array2D other) {
+  if (other == NULL) {
+    return NULL;
+  }
+
+  Array2D result = allocateArray2D(other->rows + 1, other->columns + 1);
+  for (int i = 0; i <= other->rows; i++) {
+    for (int j = 0; j <= other->columns; j++) {
+      int* data = (int*) malloc(sizeof(int*));
+      *data = *((int*)getArray2D(other, j, i));
+      setArray2D(result, data, j, i);
+    }
+  }
+  return result;
+}
+
+Array2D notDeepCopyArray2D(Array2D other) {
+  if (other == NULL) {
+    return NULL;
+  }
+
+  Array2D result = allocateArray2D(other->rows + 1, other->columns + 1);
+  for (int i = 0; i <= other->rows; i++) {
+    for (int j = 0; j <= other->columns; j++) {
+      setArray2D(result, getArray2D(other, j, i), j, i);
+    }
+  }
+  return result;
+}
+
 Array2D allocateArray2D(int x, int y) {
     if (x < 1 || y < 1) {
         return (Array2D) NULL;
