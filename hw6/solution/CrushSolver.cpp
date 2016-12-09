@@ -1,16 +1,15 @@
 #include <jansson.h>
-#include "../../shared/Array2D.h"
+#include "Array2D.h"
 #include <stdlib.h>
-#include "../../view/CrushView.h"
 #include <iostream>
 #include <string>
 #include <cstdlib>
 #include <mutex>
 #include <queue>
 #include <thread>
-#include "../../shared/ClientSocket.h"
-#include "../../shared/ServerSocket.h"
-#include "../CrushMain.h"
+#include "ClientSocket.h"
+#include "ServerSocket.h"
+#include "CrushMain.h"
 #include "string.h"
 
 using namespace std;
@@ -290,11 +289,13 @@ int main(int argc, char** argv) {
     	getModelResponse(clientSocket, &responseJson);
     	stopFlag = 1;
     	t->join();
+      delete t;
   		json_t* act = json_object_get(responseJson, "action");
   		printf("z\n");
   		if (!strcmp("bye", json_string_value(act))) {
   			json_decref(responseJson);
   			printf("exiting");
+        delete bestMove;
   			break;
   		}
   		json_decref(responseJson);

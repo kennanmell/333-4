@@ -1,0 +1,15 @@
+SRC= shared/ClientSocket.cc shared/Verify333.c shared/Array2D.c shared/CSE333Socket.cc model/CrushModel.c view/CrushView.c view/ViewMain.cpp shared/ServerSocket.cc  # change these to your source file names
+HEADERS=view/CrushView.h shared/Array2D.h model/CrushModel.h shared/CSE333Socket.h model/CrushMain.h shared/ClientSocket.h shared/ServerSocket.h shared/CSE333.h
+CFLAGS = -Wall -Wpedantic -std=c++11
+IFLAGS =  -I../hw2 -I../jansson/include
+GTKCFLAGS = `pkg-config --cflags gtk+-3.0`
+LDFLAGS =  -L../hw2 -L../jansson/lib -l:libjansson.a
+GTKLDFLAGS = `pkg-config --libs gtk+-3.0`
+
+all: hw5
+
+hw5: $(SRC) $(HEADERS) $(LIBS)
+	g++ $(CFLAGS) -g -O0 $(IFLAGS) $(GTKCFLAGS) -o hw5-view $(SRC) $(LDFLAGS) $(GTKLDFLAGS)
+
+clean:
+	rm -f *.o *~ hw5
