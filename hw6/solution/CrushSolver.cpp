@@ -1,6 +1,7 @@
 #include <jansson.h>
 #include "Array2D.h"
 #include <stdlib.h>
+#include <limits.h>
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -17,13 +18,11 @@ using namespace std;
 // Default read buffer size.
 #define BUFSIZE 1024
 // Depth cutoff for parallel solver algorithm.
-#define CUTOFF 2
+#define CUTOFF 10
 // Socket for reading and writing to server.
 hw5_net::ClientSocket* clientSocket;
 // Represents the current game state. Should match the state displayed on the view server.
 CrushMain* gameInstance;
-// Lock for the parallel solver algorithm.
-mutex mtx;
 // Lock for the total moves created field.
 mutex movesMtx;
 // The total number of Move objects created, i.e. the total moves evaluated by the algorithm.
@@ -99,6 +98,8 @@ class Move {
 	int direction;
 	// not set by default. If set, indicates the "best" game score that can result from making the move.
 	int score;
+  // INT_MAX by default. If set, indicates the depth in the move tree at which score will be achieved.
+  int depth;
 
 	// Constructor to make a Move representing the swap between (x, y) and (x2, y2)
 	Move(int x, int y, int x2, int y2) {
@@ -109,6 +110,7 @@ class Move {
 		this->y = y;
 		this->x2 = x2;
 		this->y2 = y2;
+    this->depth = INT_MAX;
 		if (x + 1 == x2) {
 			// Right
 			this->direction = 1;
@@ -173,35 +175,24 @@ int gameIsWon(CrushMain* state) {
 void threadExec(CrushMain* old, Move* topMove, Move* moveToMake, int depth) {
 	CrushMain* state = new CrushMain(*old);
 	state->updateWithMove(moveToMake->x, moveToMake->y, moveToMake->x2, moveToMake->y2);
-	queue<thread*>* threads = new queue<thread*>();
 	if (stopFlag || depth == CUTOFF || gameIsWon(state)) {
-		mtx.lock();
-		topMove->score = state->currentScore;
-		mtx.unlock();
+    if (topMove->score < state->currentScore) {
+      topMove->score = state->currentScore;
+      topMove->depth = depth;
+    } else if (topMove->score == state->currentScore && topMove->depth > depth) {
+      topMove->depth = depth;
+    }
 	} else {
 		queue<Move*>* allMoves = findAllValidMoves(state);
-		for (uint i = 0; i < allMoves->size(); i++) {
-			Move* currentMove = allMoves->front();
-			currentMove->score = state->currentScore;
-			allMoves->pop();
-			allMoves->push(currentMove);
-			thread* t = new thread(&threadExec, state, topMove, currentMove, depth + 1);
-			threads->push(t);
-		}
-		while (!threads->empty()) {
-			thread* t = threads->front();
-			t->join();
-			delete t;
-			threads->pop();
-		}
-		while (!allMoves->empty()) {
-			Move* currentMove = allMoves->front();
-			delete currentMove;
-			allMoves->pop();
-		}
+    while (!allMoves->empty()) {
+      Move* currentMove = allMoves->front();
+      currentMove->score = state->currentScore;
+      threadExec(state, topMove, currentMove, depth + 1);
+      allMoves->pop();
+      delete currentMove;
+    }
 		delete allMoves;
 	}
-	delete threads;
 	delete state;
 }
 
@@ -228,7 +219,7 @@ void findBestMove(Move** resultReturned) {
 	while (!allMoves2->empty()) {
 		Move* currentMove = allMoves2->front();
 		allMoves2->pop();
-		if (bestMove == NULL || bestMove->score < currentMove->score) {
+		if (bestMove == NULL || bestMove->score < currentMove->score || (bestMove->score == currentMove->score && bestMove->depth > currentMove->depth)) {
 			if (bestMove != NULL) {
 				delete bestMove;
 			}
@@ -243,6 +234,7 @@ void findBestMove(Move** resultReturned) {
 	delete threads;
 
 	*resultReturned = bestMove;
+  printf("Best Move: %d %d", bestMove->score, bestMove->depth);
 }
 
 // Main method to solve a candy crush game.
@@ -281,7 +273,7 @@ int main(int argc, char** argv) {
     json_t* myMoveJson = json_string("mymove");
     // Json object representing our team name, 1934820.
     json_t* teamnameJson = json_string("1934820");
-
+    int movesMadeSoFar = 0;
     while (true) {
     	stopFlag = 0;
     	Move* bestMove;
@@ -306,8 +298,10 @@ int main(int argc, char** argv) {
   		json_object_set(response, "teamname", teamnameJson);
   		  		printf("b\n");
   		printArray(gameInstance->boardCandies);
-  		printf("%d %d %d %d %d %d", bestMove->x, bestMove->y, bestMove->x2, bestMove->y2, bestMove->direction, bestMove->score);
+  		printf("%d %d %d %d %d %d %d", bestMove->x, bestMove->y, bestMove->x2, bestMove->y2, bestMove->direction, bestMove->score, bestMove->depth);
   		gameInstance->updateWithMove(bestMove->x, bestMove->y, bestMove->x2, bestMove->y2);
+      movesMadeSoFar += 1;
+      printf("made move %d\n", movesMadeSoFar);
   		printf("t\n");
   		json_t* moveJson = json_object();
   		json_t* directionJson = json_integer(bestMove->direction);
